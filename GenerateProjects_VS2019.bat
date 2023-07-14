@@ -1,2 +1,2 @@
-call Dependencies\Premake\premake5 vs2019
+call depend\premake\premake5 vs2019
 PAUSE

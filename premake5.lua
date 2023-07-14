@@ -1,13 +1,12 @@
-workspace "FoF_AS"
+--should change AS_ prefix on defines later (after compiling an testing)
+
+--SOLUTION: fViz2D_base
+workspace "fViz2D_base"
 	startproject "TestApp"
 
 	configurations {"Debug", "Release"}
 	
-	platforms { "x86", "x86_64" }
-
-	filter "platforms:x86"
-		architecture "x86"
-		defines "SYS_ARCH=x86"
+	platforms { "x86_64" }
 
 	filter "platforms:x86_64"
 		architecture "x86_64"
@@ -22,27 +21,21 @@ workspace "FoF_AS"
 	defines 'CURR_SYSTEM="%{cfg.system}"'	
 	
 	IncludeDir = {}
-	IncludeDir["GLM"]     = "%{wks.location}/Dependencies/glm/include"
-	IncludeDir["SPDLOG"]  = "%{wks.location}/Dependencies/spdlog/include"
-	IncludeDir["AUXAPIS"] = "%{wks.location}/Aux0/APIs"
-	IncludeDir["IMGUI"]   = "%{wks.location}/Dependencies/imGui"
-	IncludeDir["IMGUI_BK"]= "%{wks.location}/Dependencies/imGui/backends"
-	IncludeDir["STB"]     = "%{wks.location}/Dependencies/stb/"
-	IncludeDir["COMM_API"] = "%{wks.location}/CommLayer/API"
-	IncludeDir["AS_API"] = "%{wks.location}/AgentSystem/API"
-	
+	IncludeDir["IMGUI"]  = "%{wks.location}/depend/imgui-docking"
+	IncludeDir["SPDLOG"]  = "%{wks.location}/depend/spdlog/include"
+	IncludeDir["F_AUX_API"] = "%{wks.location}/fAux/API"
+	IncludeDir["F_VIZ2D_API"] = "%{wks.location}/fViz2D/API"
 
 	LibDir = {}
-	LibDir["AUX0"]   = ("%{wks.location}/Aux0/lib/" .. outputdir)
-	LibDir["AGENT_SYSTEM"] = ("%{wks.location}/AgentSystem/lib/" .. outputdir)
-	LibDir["COMM_LAYER"] = ("%{wks.location}/CommLayer/lib/" .. outputdir)
+	LibDir["F_AUX"]   = ("%{wks.location}/fAux/lib/" .. outputdir)
+	LibDir["F_VIZ2D"]   = ("%{wks.location}/fViz2D/lib/" .. outputdir)
 
 	binDir = "bin/" .. outputdir .. "/%{prj.name}"
 	binIntDir = "bin-int/" .. outputdir .. "/%{prj.name}"
 	
-
-project "Aux0"
-	location "Aux0"
+--PROJECT: fAux
+project "fAux"
+	location "fAux"
 	kind "Staticlib"
 	language "C++"
 	cppdialect "C++17"
@@ -51,7 +44,7 @@ project "Aux0"
 	pchheader "miscStdHeaders.h"
 	pchsource "%{prj.name}/src/miscStdHeaders.cpp"
 
-	defines "AUX0"
+	defines "F_AUX"
 
 	flags
 	{
@@ -65,42 +58,28 @@ project "Aux0"
 	{
 		"%{prj.name}/src/**.cpp",
 		"%{prj.name}/src/**.h",
-		"%{prj.name}/include/**.h",
-		"%{prj.name}/APIs/**.h",
 		"%{prj.name}/src/**.hpp",
 		"%{prj.name}/include/**.hpp",
-		"%{prj.name}/APIs/**.hpp"
+		"%{prj.name}/include/**.h",
+		"%{prj.name}/API/**.h",		
+		"%{prj.name}/API/**.hpp"
 	}
 
 	includedirs {
-		"%{IncludeDir.GLM}",
 		"%{IncludeDir.SPDLOG}",
 		"%{prj.name}/include",
-		"%{prj.name}/APIs",
-		"%{IncludeDir.AUXAPIS}"
+		"%{IncludeDir.F_AUX_API}"
 	}
 
-	filter "architecture:x86"
-		includedirs
-		{
-		}
-
-		defines	"X86"
-
-
 	filter "architecture:x86_64"
-		includedirs
-		{
-		}
 
 		defines "X64"
-
 
 	filter "system:windows"
 		systemversion "latest"
 		--buildoptions "/MT" --may cause override, should do inside filter
 
-		defines{
+		defines{ 
 			"AS_PLATFORM_WINDOWS",
 			"AS_BUILD_LIB"
 		}
@@ -116,28 +95,27 @@ project "Aux0"
 	filter {}
 	
 	postbuildcommands{
-		("{COPY} %{cfg.buildtarget.relpath} %{LibDir.AUX0}")
+		("{COPY} %{cfg.buildtarget.relpath} %{LibDir.F_AUX}")
 	}
-	
-	
-project "AgentSystem"
-	location "AgentSystem"
+
+--PROJECT: fViz2D
+project "fViz2D"
+	location "fViz2D"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
 
-	dependson {"Aux0", "CommLayer"}
+	dependson {"fAux"}
 
-	defines "AS_AGENTSYSTEM"
+	defines "F_VIZ2D"
 
 	flags
 	{
 		"MultiProcessorCompile"
 	}
 
-	links ("%{LibDir.AUX0}/Aux0.lib")
-	links ("%{LibDir.COMM_LAYER}/CommLayer.lib")
+	links ("%{LibDir.F_AUX}/fAux.lib")
 
 	targetdir (binDir)
 	objdir (binIntDir)
@@ -155,10 +133,9 @@ project "AgentSystem"
 
 	includedirs
 	{
-		"%{IncludeDir.SPDLOG}",
-		"%{IncludeDir.COMM_API}",
-		"%{IncludeDir.AUXAPIS}",
-		"%{IncludeDir.AS_API}",
+		"%{IncludeDir.SPDLOG}", --was this needed?
+		"%{IncludeDir.F_AUX_API}",
+		"%{IncludeDir.F_VIZ2D_API}",
 		"%{prj.name}/include"	
 	}
 
@@ -170,12 +147,6 @@ project "AgentSystem"
 			"AS_PLATFORM_WINDOWS",
 			"AS_BUILD_DLL"
 		}
-
-	filter "architecture:x86_64"
-		defines "X64"
-
-	filter "architecture:x86"
-		defines "X86"
 
 	filter "configurations:Debug"
 		defines "AS_DEBUG"
@@ -189,82 +160,10 @@ project "AgentSystem"
 	
 	postbuildcommands{
 		("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/TestApp"),
-		("{COPYFILE} ../" .. binDir .."/AgentSystem.lib %{LibDir.AGENT_SYSTEM}")	
-	}
-	
-	
-project "CommLayer"
-	location "CommLayer"
-	kind "SharedLib"
-	language "C++"
-	cppdialect "C++17"
-	staticruntime "off"
-
-	dependson {"Aux0"}
-
-	defines "AS_COMMLAYER"
-
-	flags
-	{
-		"MultiProcessorCompile"
+		("{COPYFILE} ../" .. binDir .."/fViz2D.lib %{LibDir.F_VIZ2D}")
 	}
 
-	links ("%{LibDir.AUX0}/Aux0.lib")
-
-	targetdir (binDir)
-	objdir (binIntDir)
-
-	files
-	{
-		"%{prj.name}/src/**.cpp",
-		"%{prj.name}/src/**.h",
-		"%{prj.name}/include/**.h",
-		"%{prj.name}/src/**.hpp",
-		"%{prj.name}/include/**.hpp",
-		"%{prj.name}/API/**.hpp",
-		"%{prj.name}/API/**.h"
-	}
-
-	includedirs
-	{
-		"%{IncludeDir.SPDLOG}",
-		"%{IncludeDir.AUXAPIS}",
-		"%{IncludeDir.AS_API}",
-		"%{IncludeDir.COMM_API}",
-		"%{prj.name}/include"
-	}
-
-	filter "system:windows"
-		systemversion "latest"
-		--buildoptions "/MD" --may cause override, should do inside filter
-
-		defines {
-			"AS_PLATFORM_WINDOWS",
-			"AS_BUILD_DLL"
-		}
-
-	filter "architecture:x86_64"
-		defines "X64"
-
-	filter "architecture:x86"
-		defines "X86"
-
-	filter "configurations:Debug"
-		defines "AS_DEBUG"
-		symbols "on"
-
-	filter "configurations:Release"
-		defines	"AS_RELEASE"
-		optimize "on" 
-
-	filter {}
-	
-	postbuildcommands{
-		("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/TestApp"),	
-		("{COPYFILE} ../"  .. binDir .. "/CommLayer.lib %{LibDir.COMM_LAYER}")		
-	}
-	
-	
+--PROJECT: testApp
 project "TestApp"
 	location "TestApp"
 	kind "ConsoleApp"
@@ -272,18 +171,17 @@ project "TestApp"
 	cppdialect "C++17"
 	staticruntime "off"
 
-	dependson {"CommLayer", "Aux0", "AgentSystem"}
+	dependson {"fAux", "fViz2D"}
 
-	defines {"AS_TESTAPP"}
+	defines "F_TESTAPP"
 
 	flags
 	{
 		"MultiProcessorCompile"
 	}
 
-	links ("%{LibDir.AUX0}/Aux0.lib")
-	links ("%{LibDir.COMM_LAYER}/CommLayer.lib")
-	links ("%{LibDir.AGENT_SYSTEM}/AgentSystem.lib")
+	links ("%{LibDir.F_AUX}/fAux.lib")
+	links ("%{LibDir.F_VIZ2D}/fViz2D.lib")
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -291,28 +189,22 @@ project "TestApp"
 	files
 	{
 		"%{prj.name}/src/**.cpp",
+		"%{prj.name}/src/**.hpp",
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/include/**.h",
-		"%{prj.name}/src/**.hpp",
 		"%{prj.name}/include/**.hpp"
 	}
 
 	includedirs
 	{
-		"%{wks.location}/Dependencies/spdlog/include",
 		"%{prj.name}/include",
-		"%{IncludeDir.SPDLOG}",
-		"%{IncludeDir.COMM_API}",
-		"%{IncludeDir.AUXAPIS}",
-		"%{IncludeDir.AS_API}"
+		"%{IncludeDir.SPDLOG}", --was this needed?
+		"%{IncludeDir.F_AUX_API}",
+		"%{IncludeDir.F_VIZ2D_API}"
 	}
-
-	filter "architecture:x86"
-		defines	"X86"
 
 	filter "architecture:x86_64"
 		defines "X64"
-
 
 	filter "system:windows"
 		systemversion "latest"
