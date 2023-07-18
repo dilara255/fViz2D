@@ -21,7 +21,9 @@ workspace "fViz2D_base"
 	defines 'CURR_SYSTEM="%{cfg.system}"'	
 	
 	IncludeDir = {}
-	IncludeDir["IMGUI"]  = "%{wks.location}/depend/imgui-docking"
+	IncludeDir["GLFW3"] = "%{wks.location}/depend/glfw3_x64"
+	IncludeDir["IMGUI"]  = "%{wks.location}/depend/imGui-docking"
+	IncludeDir["STB"]  = "%{wks.location}/depend/stb"
 	IncludeDir["SPDLOG"]  = "%{wks.location}/depend/spdlog/include"
 	IncludeDir["F_AUX_API"] = "%{wks.location}/fAux/API"
 	IncludeDir["F_VIZ2D_API"] = "%{wks.location}/fViz2D/API"
@@ -29,6 +31,7 @@ workspace "fViz2D_base"
 	LibDir = {}
 	LibDir["F_AUX"]   = ("%{wks.location}/fAux/lib/" .. outputdir)
 	LibDir["F_VIZ2D"]   = ("%{wks.location}/fViz2D/lib/" .. outputdir)
+	LibDir["GLFW3"]   = ("%{wks.location}/depend/glfw3_x64/GLFW/lib/")
 
 	binDir = "bin/" .. outputdir .. "/%{prj.name}"
 	binIntDir = "bin-int/" .. outputdir .. "/%{prj.name}"
@@ -115,6 +118,8 @@ project "fViz2D"
 		"MultiProcessorCompile"
 	}
 
+	links ("OpenGL32.lib") 
+	links ("%{LibDir.GLFW3}/glfw3.lib")
 	links ("%{LibDir.F_AUX}/fAux.lib")
 
 	targetdir (binDir)
@@ -133,7 +138,10 @@ project "fViz2D"
 
 	includedirs
 	{
-		"%{IncludeDir.SPDLOG}", --was this needed?
+		"%{IncludeDir.SPDLOG}",
+		"%{IncludeDir.IMGUI}",
+		"%{IncludeDir.GLFW3}",
+		"%{IncludeDir.STB}",
 		"%{IncludeDir.F_AUX_API}",
 		"%{IncludeDir.F_VIZ2D_API}",
 		"%{prj.name}/include"	

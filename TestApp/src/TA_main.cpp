@@ -7,6 +7,7 @@
 #include "timeHelpers.hpp"
 
 #include "tests.hpp"
+
 #include "FV2_testsAPI.hpp"
 
 //***vvv TEST BATTERY DEFINITION AREA: KEPP CONSISTENT vvv****
@@ -35,11 +36,32 @@ void printOptions(void);
 int runTestsBattery(void);
 constexpr int getTotalTests(void);
 
+void waitToExit() {
+	GETCHAR_FORCE_PAUSE;
+
+	AZ::hybridBusySleepForMicros(std::chrono::microseconds(MICROS_IN_A_SECOND));
+
+	LOG_INFO("Done! Enter to exit", 1); GETCHAR_FORCE_PAUSE;
+}
+
 int main(int argc, char **argv) {
 
 	if (argc == 1) {
 		LOG_INFO("No arguments entered, will run the tests battery\n\n");
-		return runTestsBattery();
+		
+		int failed = runTestsBattery();
+		bool passed = F_V2::rendererTest();
+
+		if(passed && !failed) {
+			LOG_INFO("All tests passed!");
+		}
+		else {
+			LOG_ERROR("Some tests found errors!");
+		}
+
+		waitToExit();
+
+		return 0;
 	}
 	else {
 		LOG_ERROR("Bad number of arguments");
@@ -106,6 +128,7 @@ void accumulateAndPrintPartialResults(const int battery){
 
 //This is the main payload:
 
+//Returns how many tests failed
 int runTestsBattery(void) {
 
 	bool printSteps = false;
@@ -113,21 +136,21 @@ int runTestsBattery(void) {
 		printSteps = true;
 	#endif
 
-	LOG_DEBUG("This is a battery of tests for Aux0\n"); GETCHAR_PAUSE;
+	LOG_DEBUG("This is a battery of automatic tests for fAux and fViz2D\n"); GETCHAR_PAUSE;
 
-	LOG_INFO("\tBATTERY 0 - SYSTEM\n", 1); GETCHAR_PAUSE;
+	LOG_DEBUG("\tBATTERY 0 - SYSTEM\n", 1); GETCHAR_PAUSE;
 
 	resultsBattery0[0] = AZ::testSnooze(printSteps);
 
 	accumulateAndPrintPartialResults(batteryIDs::SYSTEM);
 
-	LOG_INFO("\tBATTERY 1 - DATA\n", 1); GETCHAR_PAUSE;
+	LOG_DEBUG("\tBATTERY 1 - DATA\n", 1); GETCHAR_PAUSE;
 
 	resultsBattery1[0] = AZ::testFlagFields(printSteps);
 
 	accumulateAndPrintPartialResults(batteryIDs::DATA);
 
-	LOG_INFO("\tBATTERY 2 - PRNG\n", 1); GETCHAR_PAUSE;
+	LOG_DEBUG("\tBATTERY 2 - PRNG\n", 1); GETCHAR_PAUSE;
 
 	resultsBattery2[0] = AZ::testDraw1spcg32();
 
@@ -135,7 +158,7 @@ int runTestsBattery(void) {
 
 	accumulateAndPrintPartialResults(batteryIDs::PRNG);
 
-	LOG_INFO("\tBATTERY 3 - fViz2D Base\n", 1); GETCHAR_PAUSE;
+	LOG_DEBUG("\tBATTERY 3 - fViz2D Base\n", 1); GETCHAR_PAUSE;
 
 	resultsBattery3[0] = F_V2::linkAndLogTest();
 
@@ -159,11 +182,6 @@ int runTestsBattery(void) {
 
 		GETCHAR_PAUSE;
 	}
-	
-	GETCHAR_FORCE_PAUSE;
 
-	AZ::hybridBusySleepForMicros(std::chrono::microseconds(MICROS_IN_A_SECOND));
-
-	LOG_INFO("Done! Enter to exit", 1); GETCHAR_FORCE_PAUSE;
 	return (getTotalTests() - totalPassed);
 }
