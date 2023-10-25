@@ -1,9 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
-#include "stbImage/stb_image.h"
-#include "GLFW/glfw3.h"
-
 #include "utils/imageUtils.hpp"
 
+// Loads rgbaImage_t from a file. The data buffer becomes a responsability of the caller.
 IMG::rgbaImage_t IMG::load4channel8bppImageFromFile(const char* filename) {
 
     IMG::rgbaImage_t image;
@@ -12,38 +10,49 @@ IMG::rgbaImage_t IMG::load4channel8bppImageFromFile(const char* filename) {
     return image;
 }
 
-// Simple helper function to load an image into a OpenGL texture with common settings
-// Modified from https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+// Creates an OpenGL texture identifier and associates it with the rgbaTextureID_t
+void IMG::rgbaTextureID_t::createOGLtexID(GLenum minFilter, GLenum magFilter) {
+
+    glGenTextures(1, &(this->ID));
+    glBindTexture(GL_TEXTURE_2D, this->ID);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+
+    this->initialized = true;
+}
+
+//Loads an IMG::rgbaImage_t image into a texture to be rendered. 
+//If the textureID is unitialized, it's initialized first, creating an OpenGL texture identifier.
+void IMG::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, IMG::rgbaTextureID_t* texture_ptr) {
+
+    if (!texture_ptr->initialized) { texture_ptr->createOGLtexID(); }
+
+    // Select texture to be updated
+    glBindTexture(GL_TEXTURE_2D, texture_ptr->ID);
+
+    // Upload pixels into texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_ptr->width, image_ptr->height, 
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, image_ptr->data);
+
+    texture_ptr->width = image_ptr->width;
+    texture_ptr->height = image_ptr->height;
+
+    return;
+}
+
+// Loads an image into an OpenGL texture with common settings. Returns an unitialized rgbaTextureID_t on failure.
 IMG::rgbaTextureID_t IMG::load4channelTextureFromFile(const char* filename) {
 
-    IMG::rgbaTextureID_t texture;
-    texture.initialized = false;
+    IMG::rgbaTextureID_t textureID;
+    textureID.initialized = false;
 
     IMG::rgbaImage_t image = load4channel8bppImageFromFile(filename);
     if (image.data == NULL) {
-        return texture;
+        return textureID;
     }
 
-    // Create a OpenGL texture identifier
-    GLuint imageTexture;
-    glGenTextures(1, &imageTexture);
-    glBindTexture(GL_TEXTURE_2D, imageTexture);
+    IMG::load4channelTextureFromRgbaImage(&image, &textureID);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Upload pixels into texture
-#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__) //TODO: do I need to keep this condition?
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image.data);
-    stbi_image_free(image.data);
-
-    texture.ID = imageTexture;
-    texture.width = image.width;
-    texture.height = image.height;
-    
-    texture.initialized = true;
-
-    return texture;
+    return textureID;
 }

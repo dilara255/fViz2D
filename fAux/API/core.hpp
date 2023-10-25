@@ -1,26 +1,24 @@
 #pragma once
 
 //Definições para controle dos projetos, sistemas, compilação, linkagem, etc
-//TODO: A lot of this could all be on the build system. Is that preferable? 
-//Either way, go all the way EITHER there OR here
-
-//TODO: F_V2_API definition makes no sense here. Either use a single definition for all projects, or use make system for these definitions?
+//TODO: Move _API definitions to the build system
 
 #ifndef F_AUX
 	#include "logAPI.hpp" 
 #endif
 
-#define BIT(x) (1 << x)
+#define BIT(x) (1 << x) //TODO: find a better place for this
 
 namespace AZ{
 	static long long getExpectedWakeUpDelay(long long microsToSleep = 0){
 		//return (long long)round(478 - 0.00373*microsToSleep);
 		return 0;
 	}
+
+	static const char* resPathFromBinary = "../../../res/";
 }
 
-///MOVE TO PLATFORM-LAYER:
-
+///TODO: MOVE TO PLATFORM-LAYER (and maybe include that here):
 #ifdef AS_PLATFORM_WINDOWS
 
 	#ifdef F_VIZ2D
