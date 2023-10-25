@@ -4,12 +4,22 @@
 //TODO: A lot of this could all be on the build system. Is that preferable? 
 //Either way, go all the way EITHER there OR here
 
+//TODO: F_V2_API definition makes no sense here. Either use a single definition for all projects, or use make system for these definitions?
+
 #ifndef F_AUX
 	#include "logAPI.hpp" 
 #endif
 
 #define BIT(x) (1 << x)
-namespace AZ{ long long getExpectedWakeUpDelay(long long microsToSleep); }
+
+namespace AZ{
+	static long long getExpectedWakeUpDelay(long long microsToSleep = 0){
+		//return (long long)round(478 - 0.00373*microsToSleep);
+		return 0;
+	}
+}
+
+///MOVE TO PLATFORM-LAYER:
 
 #ifdef AS_PLATFORM_WINDOWS
 
@@ -18,40 +28,29 @@ namespace AZ{ long long getExpectedWakeUpDelay(long long microsToSleep); }
 	#else
 		#define	F_V2_API __declspec(dllimport)
 	#endif
-	
+
 	#define AZ_LOG_TRACE_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN)
 	#define AZ_LOG_DEBUG_COLOR (FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_INTENSITY)
 	#define AZ_LOG_INFO_COLOR (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
-	
-	//Based on tests on a single machine, tuned for release mode with low concurrency
-	inline long long AZ::getExpectedWakeUpDelay(long long microsToSleep) {
-		//return (long long)round(478 - 0.00373*microsToSleep);
-		return 0;
-	}
+
+#elif defined(F_OS_LINUX)
+
+	//Try
+	// #define	F_V2_API __attribute__ ((visibility ("default"))) ?
+	#ifdef F_VIZ2D
+		#define	F_V2_API
+	#else
+		#define	F_V2_API
+	#endif
+
+	const char azLogTraceColor[] = "\033[36m";
+	const char azLogDebugColor[] = "\033[35m\033[1m";
+	const char azLogInfoColor[] = "\033[32m\033[1m";
+
+	#define AZ_LOG_TRACE_COLOR (azLogTraceColor)
+	#define AZ_LOG_DEBUG_COLOR (azLogDebugColor)
+	#define AZ_LOG_INFO_COLOR (azLogInfoColor)
+
 #else
-	#error no support for other platforms as of yet : /
+	#error "OS not recognized"
 #endif
-
-/* These have all been moved to the build system
-
-#ifdef AS_PLATFORM_WINDOWS
-	#define SYSTEM_NAME "Windows" //Moved to the build system
-#endif
-
-#ifdef AS_DEBUG
-	#define CONFIG_NAME "Debug"
-#elif RELEASE 
-	#define CONFIG_NAME "Release"
-#endif
-
-#ifdef X64
-	#define PLATFORM_NAME "64 bits"
-#elif X86
-	#define PLATFORM_NAME "32 bits"
-#endif
-
-*/
-
-
-
-

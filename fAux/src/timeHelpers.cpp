@@ -1,6 +1,6 @@
-#include "timeHelpers.hpp"
+//TODO: this file had a #pragma once. THat was a mistake, right?
 
-#pragma once
+#include "timeHelpers.hpp"
 
 #include "miscStdHeaders.h"
 
@@ -10,6 +10,8 @@
 
 namespace AZ{
 
+	//TODO: this is using dummy++ to make sure the compiler doesn't take the loop out'
+	//Clang notices dummy is useless. Is this the best way to go about it?
 	void hybridBusySleep(std::chrono::steady_clock::time_point targetWakeTime,
 		                                  std::chrono::microseconds threshold) {
 
