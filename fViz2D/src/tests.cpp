@@ -16,7 +16,9 @@ namespace F_V2 {
 
 		bool passed = false;
 
-		int returnCode = rendererMain(&passed);
+		IMG::rgbaImage_t dynamicTestData = IMG::load4channel8bppImageFromFile(IMG::bannerPathFromBinary);
+
+		int returnCode = rendererMain(&passed, &dynamicTestData);
 
 		if (passed) { LOG_INFO("Visual test passed!"); }
 		else { LOG_ERROR("Visual test failed!"); }
