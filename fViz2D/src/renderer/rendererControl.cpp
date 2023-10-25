@@ -21,13 +21,14 @@ static void tmpGlfwErrorCallback(int error, const char* description)
 
 void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr, 
             IMG::rgbaTextureID_t* bannerTexture_ptr, IMG::rgbaTextureID_t* dynamicTexture_ptr, 
-            bool* keepRendering_ptr, bool* testBool_ptr) {
+            COLOR::rgbaF_t* noiseTint_ptr, bool* keepRendering_ptr, bool* testBool_ptr) {
 
     imGuiNewFrame();
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-    imGuiTestMenu(io, &(clearColor_ptr->r), keepRendering_ptr, testBool_ptr);
+    imGuiTestMenu(io, &(clearColor_ptr->r), &(noiseTint_ptr->r), keepRendering_ptr, testBool_ptr);
     imGuiDrawTexture(bannerTexture_ptr);
+    imGuiDrawTexture(dynamicTexture_ptr, "Dynamic Data");
     ImGui::Render();
 
     clearFrameBuffer(window, *clearColor_ptr);
@@ -37,7 +38,8 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
     glfwSwapBuffers(window);
 }
 
-int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, COLOR::rgbaF_t* noiseTint_ptr) {
+int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
+                       COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr) {
 
     //INIT:
     GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, 800, 600, 
@@ -59,11 +61,11 @@ int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr
     if(!dynamicTexture.initialized) { return renrederRetCodes::DYNAMIC_IMAGE_INITIAL_LOAD_FAILED; }
 
     //RUN:
-    COLOR::rgbaF_t clearColor = COLOR::CLEAR;
     bool keepRunning = true;
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
-        render(window, io, &clearColor, &bannerTexture, &dynamicTexture, &keepRunning, externalBool_ptr);
+        render(window, io, clearColor_ptr, &bannerTexture, &dynamicTexture, noiseTint_ptr, 
+                                                           &keepRunning, externalBool_ptr);
         IMG::load4channelTextureFromRgbaImage(dynamicData_ptr, &dynamicTexture);
     }
 
@@ -75,9 +77,10 @@ int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr
 }
 
 void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
-                                                COLOR::rgbaF_t* noiseTint_ptr, int* returnCode_ptr) {
+                                         COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
+                                                                                   int* returnCode_ptr) {
 
-    *returnCode_ptr = F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, noiseTint_ptr);
+    *returnCode_ptr = F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr);
     return;
 }
 

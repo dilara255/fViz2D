@@ -4,4 +4,4 @@
 
 #include "utils/imageUtils.hpp"
 
-void imGuiDrawTexture(IMG::rgbaTextureID_t* texID_ptr);
+void imGuiDrawTexture(IMG::rgbaTextureID_t* texID_ptr, const char* windowName = "Texture Drawing");

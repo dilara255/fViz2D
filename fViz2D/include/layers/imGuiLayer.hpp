@@ -11,4 +11,5 @@ void shutDownImGui();
 void imGuiNewFrame();
 void imGuiDrawGUIandUpdateOsWindows(ImDrawData* drawData_ptr, ImGuiIO& io);
 
-void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, bool* keepRendering_ptr, bool* testBool_ptr);
+void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, float* noiseTintColorFirstElement_ptr,
+	                                                         bool* keepRendering_ptr, bool* testBool_ptr);
