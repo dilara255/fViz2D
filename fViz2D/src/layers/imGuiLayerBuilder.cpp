@@ -82,9 +82,10 @@ void imGuiDrawGUIandUpdateOsWindows(ImDrawData* drawData_ptr, ImGuiIO& io) {
     return;
 }
 
-void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, bool* keepRendering_ptr, bool* testBool_ptr) {
-    static float f = 0.0f;
-    static int counter = 0;
+void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, float* noiseTintColorFirstElement_ptr,
+                                                             bool* keepRendering_ptr, bool* testBool_ptr) {
+    //static float f = 0.0f;
+    //static int counter = 0;
 
     ImGui::Begin("Test Menu");                          
 
@@ -93,6 +94,7 @@ void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, bool* keepRen
     ImGui::Checkbox("Is this working?", testBool_ptr);
                
     ImGui::ColorEdit4("clear color", clearColorFirstElement_ptr); 
+    ImGui::ColorEdit4("noise tint", noiseTintColorFirstElement_ptr); 
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
     
