@@ -36,7 +36,7 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
     glfwSwapBuffers(window);
 }
 
-int F_V2::rendererMain(bool* testBool_ptr, IMG::rgbaImage_t* dynamicData_ptr) {
+int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr) {
 
     //INIT:
     GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, 800, 600, 
@@ -54,7 +54,7 @@ int F_V2::rendererMain(bool* testBool_ptr, IMG::rgbaImage_t* dynamicData_ptr) {
     //Create texture resorce for dynamic data:
 
     IMG::rgbaTextureID_t dynamicTexture;
-    load4channelTextureFromRgbaImage(dynamicData_ptr, &dynamicTexture);
+    IMG::load4channelTextureFromRgbaImage(dynamicData_ptr, &dynamicTexture);
     if(!dynamicTexture.initialized) { return renrederRetCodes::DYNAMIC_IMAGE_INITIAL_LOAD_FAILED; }
 
     //RUN:
@@ -62,7 +62,8 @@ int F_V2::rendererMain(bool* testBool_ptr, IMG::rgbaImage_t* dynamicData_ptr) {
     bool keepRunning = true;
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
-        render(window, io, &clearColor, &bannerTexture, &dynamicTexture, &keepRunning, testBool_ptr);
+        render(window, io, &clearColor, &bannerTexture, &dynamicTexture, &keepRunning, externalBool_ptr);
+        IMG::load4channelTextureFromRgbaImage(dynamicData_ptr, &dynamicTexture);
     }
 
     //END:
@@ -70,5 +71,12 @@ int F_V2::rendererMain(bool* testBool_ptr, IMG::rgbaImage_t* dynamicData_ptr) {
     shutDownGLFW(window);
 
     return renrederRetCodes::OK;
+}
+
+void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
+                                                                               int* returnCode_ptr) {
+
+    *returnCode_ptr = F_V2::rendererMain(externalBool_ptr, dynamicData_ptr);
+    return;
 }
 
