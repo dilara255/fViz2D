@@ -30,7 +30,7 @@ namespace AZ {
 		void updateHowManyAreOn() {
 			areOn = 0;
 
-			for (int i = 0; i < (sizeof(flags) * BITS_IN_A_BYTE); i++) {
+			for (int i = 0; i < (int)(sizeof(flags) * BITS_IN_A_BYTE); i++) {
 					areOn += ((flags & BIT(i)) != 0);
 			}
 		}
@@ -101,7 +101,7 @@ namespace AZ {
 		void updateHowManyAreOn() {
 			areOn = 0;
 			for (int i = 0; i < blocks; i++) {
-				for (int j = 0; j < (sizeof(flags[0]) * BITS_IN_A_BYTE); j++) {
+				for (int j = 0; j < (int)(sizeof(flags[0]) * BITS_IN_A_BYTE); j++) {
 					areOn += ( (flags[i] & BIT(j)) != 0);
 				}
 			}
@@ -120,15 +120,17 @@ namespace AZ {
 			return (flags[block] & BIT(bitOnTheBlock));
 		}
 
+		//TODO: maybe extract calculation og block and bitOnTheBlock?
 		void setBitOn(int bit) {
 			if (bit > 127) return; //doesn't exist
 
 			int block = bit / (sizeof(flags[0]) * BITS_IN_A_BYTE);
 			int bitOnTheBlock = bit - (block * (sizeof(flags[0]) * BITS_IN_A_BYTE));
 
-			areOn += ((flags[block] & BIT(bit)) == 0);
+			//if bit was off:
+			areOn += ((flags[block] & BIT(bitOnTheBlock)) == 0);
 
-			flags[block] = flags[block] | (BIT(bit));
+			flags[block] = flags[block] | (BIT(bitOnTheBlock));
 		}
 
 		void setBitOff(int bit) {
@@ -137,9 +139,10 @@ namespace AZ {
 			int block = bit / (sizeof(flags[0]) * BITS_IN_A_BYTE);
 			int bitOnTheBlock = bit - (block * (sizeof(flags[0]) * BITS_IN_A_BYTE));
 
-			areOn -= ((flags[block] & BIT(bit)) > 0);
+			//if bit was on:
+			areOn -= ((flags[block] & BIT(bitOnTheBlock)) > 0);
 
-			flags[block] = flags[block] & (~(BIT(bit)));
+			flags[block] = flags[block] & (~(BIT(bitOnTheBlock)));
 		}
 
 		int getNumberOfBlocks() {

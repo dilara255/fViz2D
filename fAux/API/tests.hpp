@@ -560,7 +560,8 @@ namespace AZ{
 		}
 		std::chrono::microseconds longestSnooze = std::chrono::microseconds(0);
 		int longestSnoozeLoadAndThresholdIndex = -1;
-		int sleptMoreThanExpected = 0;
+
+		//int sleptMoreThanExpected = 0; //TODO: Review and delete
 
 		std::chrono::microseconds start;
 		std::chrono::microseconds end;
@@ -622,7 +623,7 @@ namespace AZ{
 		if (log) {
 			printf("\nHybrid Sleep test completed. Ran %d total cycles (Passed %f%%), target sleep: from %d to %d microseconds\n",
 					totalCycles, proportionPassed*100, minimumSleepTimeMicros, maximumSleepTimeMicros);
-			printf("\tAvg snooze: %f microseconds (baseline: %f microseconds). Longest: %lld microseconds (thresh lvl %d, load lvl %d)\n",
+			printf("\tAvg snooze: %f microseconds (baseline: %f microseconds). Longest: %ld microseconds (thresh lvl %d, load lvl %d)\n",
 					totalAvgSnooze, baselineMicros, longestSnooze.count(),
 				    longestSnoozeThresholdLvl, longestSnoozeParallelLoadLvl);
 			for (int i = 0; i < QUANTITY_LOADS; i++) {

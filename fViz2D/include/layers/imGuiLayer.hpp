@@ -7,6 +7,8 @@
 
 ImGuiIO& initImgui(GLFWwindow* window, const char* glsl_version);
 void shutDownImGui();
+
 void imGuiNewFrame();
 void imGuiDrawGUIandUpdateOsWindows(ImDrawData* drawData_ptr, ImGuiIO& io);
+
 void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, bool* keepRendering_ptr, bool* testBool_ptr);

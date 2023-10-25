@@ -17,7 +17,7 @@
 enum batteryIDs {SYSTEM, DATA, PRNG, FV2_BASE, TOTAL};
 enum batterySizes { SYSTEM_SZ = 1, DATA_SZ = 1, PRNG_SZ = 2, FV2_BASE_SZ = 1 };
 
-int batterySizes[batteryIDs::TOTAL] = {SYSTEM_SZ, DATA_SZ, PRNG_SZ, FV2_BASE_SZ};
+constexpr int batterySizes[batteryIDs::TOTAL] = {SYSTEM_SZ, DATA_SZ, PRNG_SZ, FV2_BASE_SZ};
 
 bool resultsBattery0[batterySizes::SYSTEM_SZ];
 bool resultsBattery1[batterySizes::DATA_SZ];
