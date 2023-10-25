@@ -18,7 +18,9 @@ namespace F_V2 {
 
 		IMG::rgbaImage_t dynamicTestData = IMG::load4channel8bppImageFromFile(IMG::bannerPathFromBinary);
 
-		int returnCode = rendererMain(&passed, &dynamicTestData);
+		int returnCode;
+		std::thread testRendererThread(F_V2::rendererMainForSeparateThread, &passed, &dynamicTestData, &returnCode);
+		testRendererThread.join();
 
 		if (passed) { LOG_INFO("Visual test passed!"); }
 		else { LOG_ERROR("Visual test failed!"); }
