@@ -6,7 +6,8 @@
 #include "layers/glfwOglLayer.hpp"
 #include "layers/imGuiLayer.hpp"
 
-#include"renderer/rendererControl.hpp"
+#include "renderer/rendererControl.hpp"
+#include "resourcePaths.hpp"
 
 #include "utils/imageUtils.hpp"
 #include "utils/guiUtils.hpp"
@@ -36,7 +37,7 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
     glfwSwapBuffers(window);
 }
 
-int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr) {
+int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, COLOR::rgbaF_t* noiseTint_ptr) {
 
     //INIT:
     GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, 800, 600, 
@@ -48,7 +49,7 @@ int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr
 
     //Load test bannerTexture:
 
-    IMG::rgbaTextureID_t bannerTexture = IMG::load4channelTextureFromFile(IMG::bannerPathFromBinary);
+    IMG::rgbaTextureID_t bannerTexture = IMG::load4channelTextureFromFile(F_V2::bannerPathFromBinary);
     if (!bannerTexture.initialized) { return renrederRetCodes::IMAGE_LOAD_FAILED; }
 
     //Create texture resorce for dynamic data:
@@ -74,9 +75,9 @@ int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr
 }
 
 void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
-                                                                               int* returnCode_ptr) {
+                                                COLOR::rgbaF_t* noiseTint_ptr, int* returnCode_ptr) {
 
-    *returnCode_ptr = F_V2::rendererMain(externalBool_ptr, dynamicData_ptr);
+    *returnCode_ptr = F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, noiseTint_ptr);
     return;
 }
 

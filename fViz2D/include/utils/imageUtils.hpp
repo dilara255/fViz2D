@@ -5,12 +5,16 @@
 
 namespace IMG {
 
-	static const char* bannerPathFromBinary = "../../../res/testBanner.jpg";
-
 	typedef struct rgbaImage_st {
 		unsigned char* data;
 		int width, height;
+		int channels = 4;
 
+		int getIndex(uint32_t row, uint32_t collumn, uint8_t channel) {
+			int stride = channels * width;
+			return (row * stride) + (collumn * channels) + channel;
+		}
+		int maxIndex() { return ( (channels * width * height) - 1 ); }
 		~rgbaImage_st() { stbi_image_free(data); }
 	} rgbaImage_t;
 
@@ -33,5 +37,11 @@ namespace COLOR {
 		float r, g, b, a;
 	} rgbaF_t;
 
-	const rgbaF_t CLEAR = {0.263f, 0.141f, 0.384f, 1.00f};
+	typedef struct rgbaC_st {
+		char r, g, b, a;
+	} rgbaC_t;
+
+	//TODO: a reasonable way to have defaults for both formats
+	const rgbaF_t CLEAR = {0.263f, 0.141f, 0.384f, 1.0f};
+	const rgbaF_t FULL_WHITE = {1.0f, 1.0f, 1.0f, 1.0f};
 }
