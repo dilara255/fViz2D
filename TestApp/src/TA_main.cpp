@@ -44,31 +44,61 @@ void waitToExit() {
 	LOG_INFO("Done! Enter to exit", 1); GETCHAR_FORCE_PAUSE;
 }
 
+//***vvv Test argument line options definition vvv***
+
+//TODO: review how this works (together with main)
+const char* onlyAuto = "auto";
+const char* onlyVisual = "visual";
+typedef enum { ONLY_AUTO, ONLY_VISUAL, ALL, NONE } testsToRun_t;
+
+//***^^^ Test argument line options definition ^^^***
+
 int main(int argc, char **argv) {
 
+	testsToRun_t tests = testsToRun_t::NONE;
+
 	if (argc == 1) {
-		LOG_INFO("No arguments entered, will run the tests battery\n\n");
-		
-		int failed = runTestsBattery();
-		bool passed = F_V2::rendererTest();
-
-		if(passed && !failed) {
-			LOG_INFO("All tests passed!");
-		}
-		else {
-			LOG_ERROR("Some tests found errors!");
-		}
-
-		waitToExit();
-
-		return 0;
+		tests = testsToRun_t::ALL;
 	}
-	else {
-		LOG_ERROR("Bad number of arguments");
+	else if(argc == 2) {
+		if ( strcmp(argv[1], onlyAuto) == 0 ) {
+			tests = testsToRun_t::ONLY_AUTO;
+		}
+		else if ( strcmp(argv[1], onlyVisual)  == 0 ) {
+			tests = testsToRun_t::ONLY_VISUAL;
+		}
+	}
+
+	if (tests == testsToRun_t::NONE) {
+		LOG_ERROR("Bad arguments");
 		printOptions();
 		GETCHAR_FORCE_PAUSE;
 		return 1;
 	}
+
+	bool runAutoTests = (tests == testsToRun_t::ALL) || (tests == testsToRun_t::ONLY_AUTO);
+	bool runVisualTests = (tests == testsToRun_t::ALL) || (tests == testsToRun_t::ONLY_VISUAL);
+
+	if (tests == testsToRun_t::ALL) { LOG_INFO("Will run all tests\n\n"); }
+	if (tests == testsToRun_t::ONLY_AUTO) { LOG_INFO("Will run only automatic tests\n\n"); }
+	if (tests == testsToRun_t::ONLY_VISUAL) { LOG_INFO("Will run only visual tests\n\n"); }
+		
+	int failed = 0;
+	bool passed = true;
+
+	if(runAutoTests) { failed = runTestsBattery(); }
+	if(runVisualTests) { passed = F_V2::rendererTest(); }
+
+	if(passed && !failed) {
+		LOG_INFO("All tests passed!");
+	}
+	else {
+		LOG_ERROR("Some tests found errors!");
+	}
+
+	waitToExit();
+
+	return 0;
 }
 
 constexpr int getTotalTests() {
@@ -101,7 +131,7 @@ void printFailedTests() {
 
 void printOptions(){
 
-	printf("Program expects zero arguments (default test)\n\n");
+	printf("Program expects zero arguments (all tests) or one argument (\"aux\" or \"viz\")\n\n");
 	return;
 }
 
