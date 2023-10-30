@@ -76,6 +76,8 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 #elif defined(F_VIZ2D)
     #define GETLOGGER az::Log::GetV2Logger()
 #elif defined(F_CLIENTAPP)
+    //TODO: This usage of a single Client logger for multiple projects may cause problems in case of multi-threading
+    //To be fixed by making the logger system more general. Also fix premake definitions then.
     #define GETLOGGER az::Log::GetCALogger()
 #else
     #error CAN'T FIGURE OUT WHICH LOGGER TO USE. F_CLIENTAPP NOT DEFINED?
