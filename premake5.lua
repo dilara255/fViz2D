@@ -4,14 +4,20 @@
 -- TODO: review if/where SPDLOG needs to be included
 -- TODO: on windows, shouldn't try to copy to linSharedLibDest_x86_64
 
---SOLUTION: fAux_port
-workspace "fAux_port"
+--SOLUTION: fViz2D_port
+workspace "fViz2D_port"
+
+	-- Choose bellow the library kinds to be compiled:
+	fAuxLibraryKind = "Staticlib"
+	--fAuxLibraryKind = "SharedLib"
+	fViz2DlibraryKind = "Staticlib"
+	--fViz2DlibraryKind = "SharedLib"	
+
 	startproject "TestApp"
 
 	toolset("clang")
 	flags { "MultiProcessorCompile", "Verbose" }
 	warnings "Extra"
-
 
 	configurations {"Debug", "Release"}
 
@@ -22,11 +28,21 @@ workspace "fAux_port"
 		defines "SYS_ARCH=x86_64"
 	filter {}
 
+	defines { "F_V2_API=", "F_AUX_API=", "F_CLIENTAPP" }
+	-- F_CLIENTAPP will be undefined on Aux and Viz, so any client projects have it by default
+	
 	filter "system:windows"
-      defines "AS_PLATFORM_WINDOWS"
+		defines "AS_PLATFORM_WINDOWS"
+		if fViz2DlibraryKind == "SharedLib"	then 
+			undefines "F_V2_API"
+			defines { "F_V2_API=__declspec(dllimport)" }
+		end if fAuxLibraryKind == "SharedLib" then	
+			undefines "F_AUX_API"
+			defines { "F_AUX_API=__declspec(dllimport)" }
+		end
 	filter "system:linux"
-      defines "F_OS_LINUX"
-      linSharedLibDest_x86_64 = "/usr/local/lib64/"
+		defines "F_OS_LINUX"
+		linSharedLibDest_x86_64 = "/usr/local/lib64/"
 	filter {}
 
 	cfgDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
@@ -50,7 +66,7 @@ workspace "fAux_port"
 --PROJECT: fAux
 project "fAux"
 	location "fAux"
-	kind "Staticlib"
+	kind (fAuxLibraryKind)
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
@@ -59,6 +75,7 @@ project "fAux"
 	pchheader "miscStdHeaders.h"
 	pchsource "%{prj.name}/src/miscStdHeaders.cpp"
 
+	undefines "F_CLIENTAPP"
 	defines "F_AUX"
 	defines "AS_BUILD_LIB"
 
@@ -89,6 +106,10 @@ project "fAux"
 	filter "system:windows"
 		systemversion "latest"
 		--buildoptions "/MT" --may cause override, should do inside filter
+		if fAuxLibraryKind == "SharedLib" then
+			undefines "F_AUX_API"
+			defines { "F_AUX_API=__declspec(dllexport)" }
+		end
 	filter {}
 
 	filter "configurations:Debug"
@@ -104,12 +125,13 @@ project "fAux"
 --PROJECT: fViz2D
 project "fViz2D"
 	location "fViz2D"
-	kind "SharedLib"
+	kind (fViz2DlibraryKind)
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
 	pic "on"
 
+	undefines "F_CLIENTAPP"
 	defines "F_VIZ2D"
 
 	filter "system:linux"
@@ -154,6 +176,10 @@ project "fViz2D"
 	filter "system:windows"
 		systemversion "latest"
 		--buildoptions "/MT" --may cause override, should do inside filter
+		if fViz2DlibraryKind == "SharedLib"	then
+			undefines "F_V2_API"
+			defines { "F_V2_API=__declspec(dllexport)" }
+		end
 	filter {}
 
 	filter "configurations:Debug"

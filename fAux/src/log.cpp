@@ -9,7 +9,7 @@ Loggers. Usa Spdlog. Exposto via macros em logAPI.hpp
 namespace az {
 
 	std::shared_ptr<spdlog::logger> Log::s_fViz2DLogger;
-	std::shared_ptr<spdlog::logger> Log::s_TestAppLogger;
+	std::shared_ptr<spdlog::logger> Log::s_ClientAppLogger;
 	std::shared_ptr<spdlog::logger> Log::s_DebugAuxLogger;
 	int Log::initialized = 0;
 
@@ -35,7 +35,7 @@ namespace az {
 
 			spdlog::set_pattern("%^\t[%T] %n: \t%v%$");
 
-			s_fViz2DLogger = spdlog::stdout_color_mt("AS");
+			s_fViz2DLogger = spdlog::stdout_color_mt("V2");
 			s_fViz2DLogger->set_level(spdlog::level::trace);		
 			auto color_sink = 
 				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_fViz2DLogger->sinks()[0].get());
@@ -43,10 +43,10 @@ namespace az {
 			color_sink->set_color(spdlog::level::debug, AZ_LOG_DEBUG_COLOR);
 			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);	
 
-			s_TestAppLogger = spdlog::stdout_color_mt("TA");
-			s_TestAppLogger->set_level(spdlog::level::trace);
+			s_ClientAppLogger = spdlog::stdout_color_mt("CA");
+			s_ClientAppLogger->set_level(spdlog::level::trace);
 			color_sink =
-				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_TestAppLogger->sinks()[0].get());
+				static_cast<spdlog::sinks::stdout_color_sink_mt*>(s_ClientAppLogger->sinks()[0].get());
 			color_sink->set_color(spdlog::level::trace, AZ_LOG_TRACE_COLOR);
 			color_sink->set_color(spdlog::level::debug, AZ_LOG_DEBUG_COLOR);
 			color_sink->set_color(spdlog::level::info, AZ_LOG_INFO_COLOR);

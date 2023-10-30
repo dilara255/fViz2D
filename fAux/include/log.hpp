@@ -14,11 +14,11 @@ namespace az {
 	{
 	public:
 		static void init();
-		inline static std::shared_ptr<spdlog::logger>& GetVZLogger() {
+		inline static std::shared_ptr<spdlog::logger>& GetV2Logger() {
 			if (!initialized) init();  return s_fViz2DLogger;
 		}
-		inline static std::shared_ptr<spdlog::logger>& GetTALogger() {
-			if (!initialized) init(); return s_TestAppLogger;
+		inline static std::shared_ptr<spdlog::logger>& GetCALogger() {
+			if (!initialized) init(); return s_ClientAppLogger;
 		}
 		inline static std::shared_ptr<spdlog::logger>& GetDALogger() {
 			if (!initialized) init(); return s_DebugAuxLogger;
@@ -28,9 +28,9 @@ namespace az {
 							   const char* message, uint32_t trailingNewlines = 0);
 
 	private:
+		static std::shared_ptr<spdlog::logger> s_DebugAuxLogger; //used to provide extra info on Debug / Verbose
 		static std::shared_ptr<spdlog::logger> s_fViz2DLogger;
-		static std::shared_ptr<spdlog::logger> s_TestAppLogger;
-		static std::shared_ptr<spdlog::logger> s_DebugAuxLogger;
+		static std::shared_ptr<spdlog::logger> s_ClientAppLogger;		
 		static int initialized;
 	};
 
