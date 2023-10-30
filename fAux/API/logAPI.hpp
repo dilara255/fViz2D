@@ -70,13 +70,17 @@ inline void consumeAllcharacters(bool showMessage = true, int trailingNewlines =
 
 //MACROS log Agent System
 
-#ifdef F_VIZ2D
-    #define GETLOGGER az::Log::GetVZLogger()
+#ifdef F_AUX
+    #define GETLOGGER (assert("F_AXU calls to GETLOGGER not yet supported"))
+    //TODO: Do I want to implement F_AUX logger? Maybe only for initialization and stuff?
+#elif defined(F_VIZ2D)
+    #define GETLOGGER az::Log::GetV2Logger()
+#elif defined(F_CLIENTAPP)
+    #define GETLOGGER az::Log::GetCALogger()
+#else
+    #error CAN'T FIGURE OUT WHICH LOGGER TO USE. F_CLIENTAPP NOT DEFINED?
 #endif
 
-#ifdef F_TESTAPP
-    #define GETLOGGER az::Log::GetTALogger()
-#endif
 
 //Will only actually pause if GETCHAR_FORCE_PAUSE should pause
 #define SHOULD_CRITICALS_PAUSE (PAUSE_ON_CRITICALS || PAUSE_ON_ERRORS || PAUSE_ON_WARNINGS)

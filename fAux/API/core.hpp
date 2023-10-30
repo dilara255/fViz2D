@@ -21,25 +21,11 @@ namespace AZ{
 ///TODO: MOVE TO PLATFORM-LAYER (and maybe include that here):
 #ifdef AS_PLATFORM_WINDOWS
 
-	#ifdef F_VIZ2D
-		#define	F_V2_API __declspec(dllexport)
-	#else
-		#define	F_V2_API __declspec(dllimport)
-	#endif
-
 	#define AZ_LOG_TRACE_COLOR (FOREGROUND_BLUE | FOREGROUND_GREEN)
 	#define AZ_LOG_DEBUG_COLOR (FOREGROUND_BLUE | FOREGROUND_RED | FOREGROUND_INTENSITY)
 	#define AZ_LOG_INFO_COLOR (FOREGROUND_GREEN | FOREGROUND_INTENSITY)
 
 #elif defined(F_OS_LINUX)
-
-	//Try
-	// #define	F_V2_API __attribute__ ((visibility ("default"))) ?
-	#ifdef F_VIZ2D
-		#define	F_V2_API
-	#else
-		#define	F_V2_API
-	#endif
 
 	const char azLogTraceColor[] = "\033[36m";
 	const char azLogDebugColor[] = "\033[35m\033[1m";
