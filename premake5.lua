@@ -30,6 +30,9 @@ workspace "fViz2D_port"
 
 	defines { "F_V2_API=", "F_AUX_API=", "F_CLIENTAPP" }
 	-- F_CLIENTAPP will be undefined on Aux and Viz, so any client projects have it by default
+	-- Note that this will have to be changed when the logging system is made more general
+	-- WARNING: right now, there's a danger of concurrency if there are multiple Client Apps and
+	-- extra loggers aren't manually added (which needs a recompile of fAux)
 	
 	filter "system:windows"
 		defines "AS_PLATFORM_WINDOWS"
