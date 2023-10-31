@@ -2,6 +2,13 @@
 
 #include "layers/imGuiLayer.hpp"
 
+#include "renderer/rendererData.hpp"
 #include "utils/imageUtils.hpp"
 
-void imGuiDrawTexture(IMG::rgbaTextureID_t* texID_ptr, const char* windowName = "Texture Drawing");
+namespace GUI {
+	void imGuiDrawTexture(TEX::textureID_t* texID_ptr, const char* windowName = "Texture Drawing");
+
+	void imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, float* noiseTintColorFirstElement_ptr,
+	                                                             bool* keepRendering_ptr, bool* testBool_ptr);
+}
+

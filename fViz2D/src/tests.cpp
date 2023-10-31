@@ -1,3 +1,4 @@
+#include "FV2_API.hpp"
 #include "FV2_testsAPI.hpp"
 
 #include "renderer/rendererControl.hpp"
@@ -20,16 +21,17 @@ namespace F_V2 {
 		bool passedVisualInspection = false;
 
 		IMG::rgbaImage_t dynamicTestData = 
-			IMG::load4channel8bppImageFromFile(F_V2::noiseColor512by512pathFromBinary);
+			IMG::load4channel8bpcImageFromFile(F_V2::noiseColor512by512pathFromBinary);
 		IMG::rgbaImage_t tintedDynamicTestData = 
-			IMG::load4channel8bppImageFromFile(F_V2::noiseColor512by512pathFromBinary);
+			IMG::load4channel8bpcImageFromFile(F_V2::noiseColor512by512pathFromBinary);
 
 		int returnCode = F_V2::renrederRetCodes::STILL_RUNNING;
 		COLOR::rgbaF_t noiseTint = COLOR::FULL_WHITE;
 		noiseTint.a = 0.6; //just to show a bit of the clear color by default
 		COLOR::rgbaF_t clearColor = COLOR::CLEAR;
-		std::thread testRendererThread(F_V2::rendererMainForSeparateThread, &passedVisualInspection, 
-			                           &tintedDynamicTestData, &clearColor, &noiseTint, &returnCode);
+
+		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
+			                       &tintedDynamicTestData, &clearColor, &noiseTint, &returnCode);
 		
 		//Change the dynamic image while the rendering isn't done:
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;

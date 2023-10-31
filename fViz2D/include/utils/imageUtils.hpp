@@ -18,18 +18,7 @@ namespace IMG {
 		~rgbaImage_st() { stbi_image_free(data); }
 	} rgbaImage_t;
 
-	typedef struct rgbaTextureID_t {
-		GLuint ID = 0;
-		bool initialized = false;
-		int width, height;
-
-		void createOGLtexID(GLenum minFilter = GL_LINEAR, GLenum magFilter = GL_LINEAR);
-		~rgbaTextureID_t() { glDeleteTextures(1, &ID); }
-	} rgbaTextureID_t;
-
-	rgbaImage_t load4channel8bppImageFromFile(const char* filename);
-	void load4channelTextureFromRgbaImage(rgbaImage_t* image_ptr, IMG::rgbaTextureID_t* texture_ptr);
-	rgbaTextureID_t load4channelTextureFromFile(const char* filename);	
+	rgbaImage_t load4channel8bpcImageFromFile(const char* filename);
 }
 
 namespace COLOR {
