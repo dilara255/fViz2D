@@ -25,7 +25,7 @@ namespace F_V2 {
 		IMG::rgbaImage_t tintedDynamicTestData = 
 			IMG::load4channel8bpcImageFromFile(F_V2::noiseColor512by512pathFromBinary);
 
-		int returnCode = F_V2::renrederRetCodes::STILL_RUNNING;
+		F_V2::rendererRetCode_st returnCode = F_V2::rendererRetCode_st::STILL_RUNNING;
 		COLOR::rgbaF_t noiseTint = COLOR::FULL_WHITE;
 		noiseTint.a = 0.6; //just to show a bit of the clear color by default
 		COLOR::rgbaF_t clearColor = COLOR::CLEAR;
@@ -35,7 +35,7 @@ namespace F_V2 {
 		
 		//Change the dynamic image while the rendering isn't done:
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
-		while (returnCode == F_V2::renrederRetCodes::STILL_RUNNING) {
+		while (returnCode == F_V2::rendererRetCode_st::STILL_RUNNING) {
 	
 			const int totalPixels = dynamicTestData.size.width * dynamicTestData.size.height;
 			int indexR, indexG, indexB;
@@ -69,6 +69,6 @@ namespace F_V2 {
 
 		GETCHAR_PAUSE;
 
-		return passedVisualInspection && (returnCode == F_V2::renrederRetCodes::OK);
+		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
 	}
 }

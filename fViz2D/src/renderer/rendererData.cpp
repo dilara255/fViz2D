@@ -21,7 +21,7 @@ bool TEX::textureID_t::createOGLtexID(GLenum minFilter, GLenum magFilter) {
 }
 
 void TEX::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::textureID_t* texture_ptr) {
-
+    if (!image_ptr->size.initialized) { texture_ptr->initialized = false; return; }
     if (!texture_ptr->initialized) { texture_ptr->createOGLtexID(); }
 
     // Select texture to be updated
@@ -31,8 +31,29 @@ void TEX::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::tex
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_ptr->size.width, image_ptr->size.height, 
                  0, GL_RGBA, GL_UNSIGNED_BYTE, image_ptr->data);
 
+    //TODO: check OGL errors and add return codes
+
     texture_ptr->width = image_ptr->size.width;
     texture_ptr->height = image_ptr->size.height;
+
+    return;
+}
+
+void TEX::loadR32FtextureFromFloats(IMG::floats2Dfield_t* field_ptr, TEX::textureID_t* texture_ptr) {
+    if (!field_ptr->size.initialized) { texture_ptr->initialized = false; return; }
+    if (!texture_ptr->initialized) { texture_ptr->createOGLtexID(); }
+
+    // Select texture to be updated
+    glBindTexture(GL_TEXTURE_2D, texture_ptr->ID);
+
+    // Upload pixels into texture
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, field_ptr->size.width, field_ptr->size.height, 
+                 0, GL_RED, GL_FLOAT, field_ptr->data);
+
+    //TODO: check OGL errors and add return codes
+
+    texture_ptr->width = field_ptr->size.width;
+    texture_ptr->height = field_ptr->size.height;
 
     return;
 }
@@ -40,7 +61,6 @@ void TEX::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::tex
 TEX::textureID_t TEX::load4channelTextureFromFile(const char* filename) {
 
     TEX::textureID_t textureID;
-    textureID.initialized = false;
 
     IMG::rgbaImage_t image = IMG::load4channel8bpcImageFromFile(filename);
     if (image.data == NULL) {

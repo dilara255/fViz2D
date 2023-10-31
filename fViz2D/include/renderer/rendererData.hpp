@@ -1,5 +1,7 @@
 #pragma once
 
+//TODO: review: some stuff here probably could be made more general to support more types (template?)
+
 #include "GLFW/glfw3.h"
 
 #include "utils/imageUtils.hpp"
@@ -25,4 +27,8 @@ namespace TEX {
 	//Loads an IMG::rgbaImage_t image into a texture to be rendered. 
 	//If the textureID is unitialized, it's initialized first, creating an OpenGL texture identifier.
 	void load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::textureID_t* texture_ptr);
+
+	//Loads IMG::floats2Dfield_t field into a red-channel only texture of floats to be rendered.
+	//If the textureID is unitialized, it's initialized first, creating an OpenGL texture identifier.
+	void loadR32FtextureFromFloats(IMG::floats2Dfield_t* field_ptr, textureID_t* texture_ptr);
 }

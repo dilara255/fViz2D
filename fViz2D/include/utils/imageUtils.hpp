@@ -1,31 +1,37 @@
 #pragma once
 
+//TODO: review: some stuff here probably could be made more general to support more types (template?)
+
 #include "GLFW/glfw3.h"
 #include "stbImage/stb_image.h"
+
+#include "returnCodes.hpp"
 
 namespace IMG {
 
 	typedef struct imgSizeInfo_st {
-		int width, height;
-		int channels;
+		size_t width = 0, height = 0;
+		size_t channels;
 		size_t bytesPerChannel;
+		bool initialized = false;
 
-		int getStride() { return channels * width; }
-
-		int getIndex(uint32_t row, uint32_t collumn, uint8_t channel) {
+		size_t getStride() { return channels * width; }
+		size_t getIndex(uint32_t row, uint32_t collumn, uint8_t channel) {
 			return (row * getStride()) + (collumn * channels) + channel;
 		}
-		int maxIndex() { return ( (channels * width * height) - 1 ); }
+		size_t getMaxIndex() { return ( (channels * width * height) - 1 ); }
+		size_t getTotalElements() { return channels * width * height; }
 	} imgSizeInfo_t;
 
 	typedef struct rgbaImage_st {
 		unsigned char* data;
 		imgSizeInfo_t size = {0, 0, 4, 1};
+		bool initialized = false;
 
 		~rgbaImage_st() { stbi_image_free(data); }
 	} rgbaImage_t;
 
-
+	// Loads rgbaImage_t from a file. The data buffer becomes a responsability of the caller.
 	rgbaImage_t load4channel8bpcImageFromFile(const char* filename);
 
 	typedef struct doubles2Dfield_st {
@@ -36,11 +42,19 @@ namespace IMG {
 	} doubles2Dfield_t;
 
 	typedef struct floats2Dfield_st {
-		double* data;
+		float* data;
 		imgSizeInfo_t size = {0, 0, 1, 4};
 
 		~floats2Dfield_st() { free(data); data = NULL; }
 	} floats2Dfield_t;
+
+	//In case alocation fails, the field's "initialized" member will be false and width/height will be zero
+	doubles2Dfield_t createDoubles2Dfield(size_t width, size_t height);
+	floats2Dfield_t createFloat2Dfield(size_t width, size_t height);
+
+	//Expects origin and destination to have the same amount of elements
+	F_V2::texRetCode_st copy2Dfield(const floats2Dfield_t* floatOrigin_ptr, doubles2Dfield_t* doubleDest_ptr);
+	F_V2::texRetCode_st copy2Dfield(const doubles2Dfield_t* doubleOrigin_ptr, floats2Dfield_t* floatDest_ptr);
 }
 
 namespace COLOR {
