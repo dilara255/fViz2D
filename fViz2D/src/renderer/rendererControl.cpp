@@ -40,14 +40,14 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
     glfwSwapBuffers(window);
 }
 
-int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr,
+F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr,
                        COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr,
                        const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     //INIT:
     GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, 800, 600, 
                                               "Ogl3 Render Test - imGui + Glfw");
-    if(window == nullptr) { return renrederRetCodes::CONTEXT_ACQ_FAILED; }
+    if(window == nullptr) { return rendererRetCode_st::CONTEXT_ACQ_FAILED; }
 
     ImGuiIO& io = GUI::initImgui(window, "#version 330");
     //TODO: check return?
@@ -55,13 +55,13 @@ int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr
     //Load test bannerTexture:
 
     TEX::textureID_t bannerTexture = TEX::load4channelTextureFromFile(bannerPathFromBinary);
-    if (!bannerTexture.initialized) { return renrederRetCodes::IMAGE_LOAD_FAILED; }
+    if (!bannerTexture.initialized) { return rendererRetCode_st::IMAGE_LOAD_FAILED; }
 
     //Create texture resorce for dynamic data:
 
     TEX::textureID_t dynamicTexture;
     TEX::load4channelTextureFromRgbaImage(dynamicData_ptr, &dynamicTexture);
-    if(!dynamicTexture.initialized) { return renrederRetCodes::DYNAMIC_IMAGE_INITIAL_LOAD_FAILED; }
+    if(!dynamicTexture.initialized) { return rendererRetCode_st::DYNAMIC_IMAGE_INITIAL_LOAD_FAILED; }
 
     //RUN:
     bool keepRunning = true;
@@ -76,12 +76,12 @@ int F_V2::rendererMain(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr
     GUI::shutDownImGui();
     shutDownGLFW(window);
 
-    return renrederRetCodes::OK;
+    return rendererRetCode_st::OK;
 }
 
 void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
                                          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
-                                         int* returnCode_ptr, 
+                                         F_V2::rendererRetCode_st* returnCode_ptr, 
                                          const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     *returnCode_ptr = 
@@ -91,7 +91,8 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::rgbaImage_
 
 [[nodiscard]] std::thread F_V2::spawnRendererOnNewThread(bool* externalBool_ptr, 
               IMG::rgbaImage_t* dynamicData_ptr, COLOR::rgbaF_t* clearColor_ptr, 
-              COLOR::rgbaF_t* noiseTint_ptr, int* returnCode_ptr, const char* bannerPathFromBinary) {
+              COLOR::rgbaF_t* noiseTint_ptr, F_V2::rendererRetCode_st* returnCode_ptr, 
+                                                   const char* bannerPathFromBinary) {
 
     std::thread newRendererThread(F_V2::rendererMainForSeparateThread, externalBool_ptr, 
 			                      dynamicData_ptr, clearColor_ptr, noiseTint_ptr, returnCode_ptr, 
@@ -100,9 +101,9 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::rgbaImage_
     return newRendererThread;
 }
 
-int F_V2::spawnRendererOnThisThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
-									COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
-		                                                         const char* bannerPathFromBinary){
+F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
+									               COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
+		                                                                        const char* bannerPathFromBinary){
 
     return F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, bannerPathFromBinary);
 }
