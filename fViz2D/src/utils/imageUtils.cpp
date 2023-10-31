@@ -5,7 +5,7 @@
 IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
 
     IMG::rgbaImage_t image;
-    image.data = stbi_load(filename, &image.width, &image.height, NULL, 4);
+    image.data = stbi_load(filename, &image.size.width, &image.size.height, NULL, 4);
 
     return image;
 }

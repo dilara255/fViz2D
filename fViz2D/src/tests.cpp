@@ -37,13 +37,13 @@ namespace F_V2 {
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
 		while (returnCode == F_V2::renrederRetCodes::STILL_RUNNING) {
 	
-			const int totalPixels = dynamicTestData.width * dynamicTestData.height;
+			const int totalPixels = dynamicTestData.size.width * dynamicTestData.size.height;
 			int indexR, indexG, indexB;
 			COLOR::rgbF_t clearContribution = { 255 * clearColor.r, 255 * clearColor.g, 255 * clearColor.b };
 
 			for (int i = 0; i < totalPixels; i++) {
 				
-				indexR = i * dynamicTestData.channels;
+				indexR = i * dynamicTestData.size.channels;
 				indexG = indexR + 1;
 				indexB = indexR + 2;
 
