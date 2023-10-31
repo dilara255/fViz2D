@@ -49,6 +49,7 @@ workspace "fViz2D_port"
 	filter {}
 
 	cfgDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+	guiCfgRelPath = "../res/guiCfg/imgui.ini"
 
 	binDir = "bin/" .. cfgDir .. "/%{prj.name}"
 	binIntDir = "bin-int/" .. cfgDir .. "/%{prj.name}"
@@ -254,4 +255,4 @@ project "TestApp"
 		optimize "on"
 	filter {}
 
-	postbuildcommands{ ("{COPYFILE} ../res/imgui.ini ../bin/" .. cfgDir .."/TestApp/") }
+	postbuildcommands{ ("{COPYFILE} " .. guiCfgRelPath .. " ../bin/" .. cfgDir .."/TestApp/") }
