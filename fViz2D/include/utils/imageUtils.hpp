@@ -5,20 +5,42 @@
 
 namespace IMG {
 
-	typedef struct rgbaImage_st {
-		unsigned char* data;
+	typedef struct imgSizeInfo_st {
 		int width, height;
-		int channels = 4;
+		int channels;
+		size_t bytesPerChannel;
+
+		int getStride() { return channels * width; }
 
 		int getIndex(uint32_t row, uint32_t collumn, uint8_t channel) {
-			int stride = channels * width;
-			return (row * stride) + (collumn * channels) + channel;
+			return (row * getStride()) + (collumn * channels) + channel;
 		}
 		int maxIndex() { return ( (channels * width * height) - 1 ); }
+	} imgSizeInfo_t;
+
+	typedef struct rgbaImage_st {
+		unsigned char* data;
+		imgSizeInfo_t size = {0, 0, 4, 1};
+
 		~rgbaImage_st() { stbi_image_free(data); }
 	} rgbaImage_t;
 
+
 	rgbaImage_t load4channel8bpcImageFromFile(const char* filename);
+
+	typedef struct doubles2Dfield_st {
+		double* data;
+		imgSizeInfo_t size = {0, 0, 1, 8};
+
+		~doubles2Dfield_st() { free(data); data = NULL; }
+	} doubles2Dfield_t;
+
+	typedef struct floats2Dfield_st {
+		double* data;
+		imgSizeInfo_t size = {0, 0, 1, 4};
+
+		~floats2Dfield_st() { free(data); data = NULL; }
+	} floats2Dfield_t;
 }
 
 namespace COLOR {

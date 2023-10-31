@@ -28,11 +28,11 @@ void TEX::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::tex
     glBindTexture(GL_TEXTURE_2D, texture_ptr->ID);
 
     // Upload pixels into texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_ptr->width, image_ptr->height, 
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_ptr->size.width, image_ptr->size.height, 
                  0, GL_RGBA, GL_UNSIGNED_BYTE, image_ptr->data);
 
-    texture_ptr->width = image_ptr->width;
-    texture_ptr->height = image_ptr->height;
+    texture_ptr->width = image_ptr->size.width;
+    texture_ptr->height = image_ptr->size.height;
 
     return;
 }
