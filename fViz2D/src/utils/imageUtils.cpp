@@ -1,7 +1,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/imageUtils.hpp"
 
-IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
+[[nodiscard]] IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
 
     IMG::rgbaImage_t image;
     image.data = stbi_load(filename, (int*)&image.size.width, (int*)&image.size.height, NULL, 4);
@@ -10,7 +10,7 @@ IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
     return image;
 }
 
-void* createBufferFor2Dfield(size_t width, size_t height, IMG::imgSizeInfo_t* size_ptr) {
+[[nodiscard]] void* createBufferFor2Dfield(size_t width, size_t height, IMG::imgSizeInfo_t* size_ptr) {
     if(size_ptr->bytesPerChannel <= 0) { return NULL; }
 
     size_ptr->width = width;
@@ -22,7 +22,7 @@ void* createBufferFor2Dfield(size_t width, size_t height, IMG::imgSizeInfo_t* si
     return data_ptr;
 }
 
-IMG::doubles2Dfield_t IMG::createDoubles2Dfield(size_t width, size_t height) {
+[[nodiscard]] IMG::doubles2Dfield_t IMG::createDoubles2Dfield(size_t width, size_t height) {
     IMG::doubles2Dfield_t newField;
 
     newField.data = (double*)createBufferFor2Dfield(width, height, &newField.size);
@@ -30,7 +30,7 @@ IMG::doubles2Dfield_t IMG::createDoubles2Dfield(size_t width, size_t height) {
     return newField;
 }
 
-IMG::floats2Dfield_t IMG::createFloat2Dfield(size_t width, size_t height) {
+[[nodiscard]] IMG::floats2Dfield_t IMG::createFloats2Dfield(size_t width, size_t height) {
     IMG::floats2Dfield_t newField;
 
     newField.data = (float*)createBufferFor2Dfield(width, height, &newField.size);

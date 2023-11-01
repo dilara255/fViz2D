@@ -50,7 +50,7 @@ namespace IMG {
 
 	//In case alocation fails, the field's "initialized" member will be false and width/height will be zero
 	doubles2Dfield_t createDoubles2Dfield(size_t width, size_t height);
-	floats2Dfield_t createFloat2Dfield(size_t width, size_t height);
+	floats2Dfield_t createFloats2Dfield(size_t width, size_t height);
 
 	//Expects origin and destination to have the same amount of elements
 	F_V2::texRetCode_st copy2Dfield(const floats2Dfield_t* floatOrigin_ptr, doubles2Dfield_t* doubleDest_ptr);

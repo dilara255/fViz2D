@@ -84,12 +84,14 @@ int main(int argc, char **argv) {
 	if (tests == testsToRun_t::ONLY_VISUAL) { LOG_INFO("Will run only visual tests\n\n"); }
 		
 	int failed = 0;
-	bool passed = true;
 
-	if(runAutoTests) { failed = runTestsBattery(); }
-	if(runVisualTests) { passed = F_V2::rendererTest(); }
+	if(runAutoTests) { failed += runTestsBattery(); }
+	if(runVisualTests) { 
+		failed += !F_V2::rendererTestFromImage(); 
+		failed += !F_V2::rendererTestFromDoubles2Dfield(); 
+	}
 
-	if(passed && !failed) {
+	if(!failed) {
 		LOG_INFO("All tests passed!");
 	}
 	else {
