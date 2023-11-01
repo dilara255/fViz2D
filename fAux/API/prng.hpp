@@ -1,5 +1,8 @@
 #pragma once
 
+//TODO: create a class wich draws N PRNs, using default seeds by default (but can change), and owns memory with the PRNs;
+//TODO: See how much of AS's PRNG server I might want to port over to Aux
+
 #include "miscStdHeaders.h"
 
 #define DRAW_WIDTH 4
@@ -7,6 +10,7 @@
 #define DEFAULT_PRNG_SEED1 (0x2545f4914f6cdd1d + 1595721457336359713)
 #define DEFAULT_PRNG_SEED2 (0x2545f4914f6cdd1d*3)
 #define DEFAULT_PRNG_SEED3 1595721457336359713
+//TODO: should the defines bellow really be here?
 #define DEFAULT_TICK_COUNT 0
 #define DEFAULT_TOTAL_MULTIPLIER 0
 
