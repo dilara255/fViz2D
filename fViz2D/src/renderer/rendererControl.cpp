@@ -24,11 +24,13 @@ static void tmpGlfwErrorCallback(int error, const char* description)
 
 void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr, 
             TEX::textureID_t* bannerTexture_ptr, TEX::textureID_t* dynamicTexture_ptr, 
-            COLOR::rgbaF_t* noiseTint_ptr, bool* keepRendering_ptr, bool* testBool_ptr) {
+            COLOR::rgbaF_t* noiseTint_ptr, bool* keepRendering_ptr, bool* testBool_ptr,
+            bool* shouldInterpolateColors_ptr) {
 
     GUI::imGuiNewFrame();
     GUI::createTransparentDockNodeOverMainViewport();      
-    GUI::imGuiTestMenu(io, &(clearColor_ptr->r), &(noiseTint_ptr->r), keepRendering_ptr, testBool_ptr);
+    GUI::imGuiTestMenu(io, &(clearColor_ptr->r), &(noiseTint_ptr->r), keepRendering_ptr, 
+                                              testBool_ptr, shouldInterpolateColors_ptr);
     GUI::imGuiDrawTexture(bannerTexture_ptr);
     GUI::imGuiDrawTexture(dynamicTexture_ptr, "Dynamic Data");
     GUI::render();
@@ -40,7 +42,19 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
     glfwSwapBuffers(window);
 }
 
-F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr,
+bool mightInterpolateColors(COLOR::colorInterpolation_t* scheme_ptr, IMG::kinds2Ddata kind) {
+    return (scheme_ptr != nullptr) && (scheme_ptr->correspondences_ptr->size() >= 2) && 
+           (kind == IMG::kinds2Ddata::FLOATS_FIELD || kind == IMG::kinds2Ddata::DOUBLES_FIELD);
+}
+
+bool shouldInterpolateColors(bool* shouldInterpolate_ptr, COLOR::colorInterpolation_t* scheme_ptr,
+                                                                            IMG::kinds2Ddata kind) {
+
+    return *shouldInterpolate_ptr && mightInterpolateColors(scheme_ptr, kind);
+}
+
+F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
+                                            IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                             COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr,
                                             COLOR::colorInterpolation_t* scheme_ptr = nullptr,
                                             std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
@@ -70,18 +84,15 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic
     IMG::kinds2Ddata kind = dynamicData_ptr->getKindOfField();
     IMG::generic2DfieldPtr_t colorInterpolationField;
     IMG::generic2DfieldPtr_t* fieldToPassToTexture_ptr = dynamicData_ptr; //may switch later
-    bool shouldInterpolateColors = (scheme_ptr != nullptr) && (scheme_ptr->correspondences_ptr->size() >= 2) && 
-                             (kind == IMG::kinds2Ddata::FLOATS_FIELD || kind == IMG::kinds2Ddata::DOUBLES_FIELD);
     
     auto size_ptr = dynamicData_ptr->getSizeInfo_ptr();
     size_t imageWidth = size_ptr->width;
     size_t imageHeight = size_ptr->height;    
 
     IMG::rgbaImage_t rgbaImage;
-    if(shouldInterpolateColors) {
+    if(mightInterpolateColors(scheme_ptr, kind)) {
         rgbaImage = IMG::createEmpty4channel8bpcImage(imageWidth, imageHeight);
         colorInterpolationField.storeRGBAfield(&rgbaImage);
-        fieldToPassToTexture_ptr = &colorInterpolationField;
     }
     
     F_V2::texRetCode_st colorInterpReturn = F_V2::texRetCode_st::OK;
@@ -90,13 +101,15 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
         render(window, io, clearColor_ptr, &bannerTexture, &dynamicTexture, noiseTint_ptr, 
-                                                           &keepRunning, externalBool_ptr);
+                                    &keepRunning, externalBool_ptr, shouldInterpolate_ptr);
         
         //TODO: not really checking return of these
-        if(shouldInterpolateColors) {
+        if(shouldInterpolateColors(shouldInterpolate_ptr, scheme_ptr, kind)) {
+            fieldToPassToTexture_ptr = &colorInterpolationField;
             colorInterpReturn = IMG::translateValuesToInterpolatedColors(dynamicData_ptr, &rgbaImage, scheme_ptr);
             assert(colorInterpReturn == F_V2::texRetCode_st::OK);
         }
+        else { fieldToPassToTexture_ptr = dynamicData_ptr; }
 
         TEX::loadTextureFromGeneric2DfieldPtr(fieldToPassToTexture_ptr, &dynamicTexture);
     }
@@ -108,7 +121,8 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic
     return rendererRetCode_st::OK;
 }
 
-void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr, 
+void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
+                                         IMG::generic2DfieldPtr_t* dynamicData_ptr, 
                                          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
                                          F_V2::rendererRetCode_st* returnCode_ptr, 
                                          COLOR::colorInterpolation_t* scheme_ptr = {},
@@ -117,12 +131,12 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2Df
                                          const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     *returnCode_ptr = 
-        F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, scheme_ptr, 
-                                                        windowName, width, height, bannerPathFromBinary);
+        F_V2::rendererMain(externalBool_ptr, shouldInterpolate_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, 
+                                                       scheme_ptr, windowName, width, height, bannerPathFromBinary);
     return;
 }
 
-[[nodiscard]] std::thread F_V2::spawnRendererOnNewThread(bool* externalBool_ptr, 
+[[nodiscard]] std::thread F_V2::spawnRendererOnNewThread(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
                                                          IMG::generic2DfieldPtr_t* dynamicData_ptr, 
                                                          COLOR::rgbaF_t* clearColor_ptr, 
                                                          COLOR::rgbaF_t* noiseTint_ptr, 
@@ -132,12 +146,13 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2Df
                                                          int width, int height, 
                                                          const char* bannerPathFromBinary) {
 
-    return std::thread(F_V2::rendererMainForSeparateThread, externalBool_ptr, dynamicData_ptr, clearColor_ptr, 
+    return std::thread(F_V2::rendererMainForSeparateThread, externalBool_ptr, shouldInterpolate_ptr, 
+                                                            dynamicData_ptr, clearColor_ptr, 
                                                             noiseTint_ptr, returnCode_ptr, scheme_ptr,
                                                             windowName, width, height, bannerPathFromBinary);
 }
 
-F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(bool* externalBool_ptr, 
+F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
                                                          IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 									                     COLOR::rgbaF_t* clearColor_ptr, 
                                                          COLOR::rgbaF_t* noiseTint_ptr, 
@@ -146,6 +161,6 @@ F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(bool* externalBool_ptr,
                                                          int width, int height, 
 		                                                 const char* bannerPathFromBinary){
 
-    return F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, scheme_ptr,
-                                                           windowName, width, height, bannerPathFromBinary);
+    return F_V2::rendererMain(externalBool_ptr, shouldInterpolate_ptr, dynamicData_ptr, clearColor_ptr, 
+                              noiseTint_ptr, scheme_ptr, windowName, width, height, bannerPathFromBinary);
 }

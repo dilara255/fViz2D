@@ -25,6 +25,7 @@ namespace F_V2 {
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a dynamic image\n"); GETCHAR_PAUSE;
 
 		bool passedVisualInspection = false;
+		bool shouldInterpolateColors = false;
 
 		IMG::rgbaImage_t dynamicTestData = 
 			IMG::load4channel8bpcImageFromFile(F_V2::noiseColor512by512pathFromBinary);
@@ -39,7 +40,8 @@ namespace F_V2 {
 		tintedDynamicTestDataPtr.storeRGBAfield(&tintedDynamicTestData);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
-			                       &tintedDynamicTestDataPtr, &clearColor, &noiseTint, &returnCode);
+														   &shouldInterpolateColors, &tintedDynamicTestDataPtr, 
+														   &clearColor, &noiseTint, &returnCode);	
 		
 			
 		//Change the dynamic image while the rendering isn't done:
@@ -91,6 +93,7 @@ namespace F_V2 {
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles\n"); GETCHAR_PAUSE;
 
 		bool passedVisualInspection = false;
+		bool shouldInterpolateColors = false;
 
 		IMG::doubles2Dfield_st noiseInternal = IMG::createDoubles2Dfield(TEST_WIDTH, TEST_HEIGHT);
 		IMG::floats2Dfield_st noiseIntermediate = IMG::createFloats2Dfield(TEST_WIDTH, TEST_HEIGHT);
@@ -110,6 +113,7 @@ namespace F_V2 {
 		COLOR::colorInterpolation_t scheme;
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
+			                                 &shouldInterpolateColors,
 			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
 			                                 &scheme,
 									         std::string("Visual Test without Color Interpolation"),
@@ -188,6 +192,7 @@ namespace F_V2 {
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles and show it with a color scheme\n"); GETCHAR_PAUSE;
 
 		bool passedVisualInspection = false;
+		bool shouldInterpolateColors = true;
 
 		IMG::doubles2Dfield_st noiseInternal = IMG::createDoubles2Dfield(TEST_WIDTH, TEST_HEIGHT);
 		IMG::floats2Dfield_st noiseToRender = IMG::createFloats2Dfield(TEST_WIDTH, TEST_HEIGHT);
@@ -208,6 +213,7 @@ namespace F_V2 {
 		scheme.normalizeSpan();
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
+			                                 &shouldInterpolateColors,
 			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
 			                                 &scheme,
 			                                 std::string("Visual Test with Color Interpolation"));
