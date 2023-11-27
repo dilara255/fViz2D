@@ -16,6 +16,7 @@ namespace F_V2 {
 	F_V2_API F_V2::rendererRetCode_st spawnRendererOnThisThread(bool* externalBool_ptr, 
 		                               IMG::generic2DfieldPtr_t* dynamicData_ptr, COLOR::rgbaF_t* clearColor_ptr, 
 		                               COLOR::rgbaF_t* noiseTint_ptr, 
+		                               int width = 800, int height = 600, 
 		                               const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
 
 	//dynamicData_ptr should hold either a rgbaImage_t or a floats2Dfield_t (see imageUtils.hpp)
@@ -23,5 +24,6 @@ namespace F_V2 {
 	F_V2_API std::thread spawnRendererOnNewThread(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 									          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
 		                                      F_V2::rendererRetCode_st* returnCode_ptr, 
+		                                      int width = 800, int height = 600, 
 		                                      const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
 }

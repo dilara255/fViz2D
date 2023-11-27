@@ -16,6 +16,8 @@ namespace F_V2 {
 		return true;
 	}
 
+	//TODO: CRITICAL: As soon as rendering is made more general, review the next two tests
+
 	bool rendererTestFromImage() {
 
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a dynamic image\n"); GETCHAR_PAUSE;
@@ -80,8 +82,6 @@ namespace F_V2 {
 		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
 	}
 
-	//TODO: CRITICAL: As soon as rendering is made more general, review these two tests
-	//TODO: Other than that, this is a complete mess, so deal with that ASAP, pls : )
 	#define TEST_WIDTH 512
 	#define TEST_HEIGHT 512
 	bool rendererTestFromDoubles2Dfield() {
@@ -107,7 +107,8 @@ namespace F_V2 {
 		noiseDataPtr.storeFloatsField(&noiseToRender);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
-			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode);
+			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
+			                                 1024, 768);
 			
 		//TODO: prngg.hpp and then this : )
 		std::vector<double> drawnPRNs;

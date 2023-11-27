@@ -42,11 +42,12 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
 
 F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                             COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr,
+                                            int width = 800, int height = 600,
                                             const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     //INIT:
-    GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, 800, 600, 
-                                              "Ogl3 Render Test - imGui + Glfw");
+    GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, width, height, 
+                                                   "Ogl3 Render Test - imGui + Glfw");
     if(window == nullptr) { return rendererRetCode_st::CONTEXT_ACQ_FAILED; }
 
     ImGuiIO& io = GUI::initImgui(window, "#version 330");
@@ -82,10 +83,12 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic
 void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr, 
                                          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
                                          F_V2::rendererRetCode_st* returnCode_ptr, 
+                                         int width = 800, int height = 600, 
                                          const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     *returnCode_ptr = 
-        F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, bannerPathFromBinary);
+        F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, width, height,
+                                                                                      bannerPathFromBinary);
     return;
 }
 
@@ -94,18 +97,21 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2Df
                                                          COLOR::rgbaF_t* clearColor_ptr, 
                                                          COLOR::rgbaF_t* noiseTint_ptr, 
                                                          F_V2::rendererRetCode_st* returnCode_ptr, 
+                                                         int width, int height, 
                                                          const char* bannerPathFromBinary) {
 
     return std::thread(F_V2::rendererMainForSeparateThread, externalBool_ptr, dynamicData_ptr, clearColor_ptr, 
-                                                          noiseTint_ptr, returnCode_ptr, bannerPathFromBinary);
+                                                            noiseTint_ptr, returnCode_ptr, width, height,
+                                                            bannerPathFromBinary);
 }
 
 F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(bool* externalBool_ptr, 
                                                          IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 									                     COLOR::rgbaF_t* clearColor_ptr, 
                                                          COLOR::rgbaF_t* noiseTint_ptr, 
+                                                         int width, int height, 
 		                                                 const char* bannerPathFromBinary){
 
-    return F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, 
-                                                                          bannerPathFromBinary);
+    return F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, width, height, 
+                                                                                         bannerPathFromBinary);
 }
