@@ -91,23 +91,55 @@ namespace COLOR {
 	//Insertions guarantees that values are in increasing order
 	typedef struct colorInterpolation_st {
 		private:
-			schemeVector_t correspondences;
+			schemeVector_t m_correspondences;
+			double m_span = 0;
+			double m_bias = 0;
 		
 	public:
-			const schemeVector_t* const correspondences_ptr = &correspondences;
+			const schemeVector_t* const correspondences_ptr = &m_correspondences;
+			const double* const bias_ptr = &m_bias;
+			const double* const span_ptr = &m_span;
 
 			bool addCorrespondence(double newValue, COLOR::rgbaC_t newColor) {  
-				if(correspondences.size() == 0 || correspondences.back().value < newValue) { 
-					correspondences.push_back({newValue, newColor});
+				if(m_correspondences.size() == 0 || m_correspondences.back().value < newValue) { 
+					m_correspondences.push_back({newValue, newColor});
+					m_bias = m_correspondences.at(0).value;
+					m_span = newValue - m_bias;
+					
 					return true; 
 				}
 				else { return false; }
 			}
 
 			void loadScheme(const schemeVector_t* schemeToLoad_ptr) { 
-				correspondences.clear();
-				correspondences = *schemeToLoad_ptr;
+				m_correspondences.clear();
+				m_correspondences = *schemeToLoad_ptr;
+				m_bias = m_correspondences.at(0).value;
+				m_span = m_correspondences.back().value - m_bias;
 			}
+
+			void changeBiasTo(double newBias) {
+				double change = newBias - m_bias;
+				for(size_t i = 0; i < m_correspondences.size(); i++) { m_correspondences.at(i).value += change; }
+				m_bias = newBias;
+			}
+
+			//Must be > 0 and only works if the scheme already has two or more elements
+			void changeSpanTo(double newSpan) {				
+				if(newSpan <= 0 || m_correspondences.size() < 2) { return; }
+
+				assert(m_span > 0);
+
+				double change = newSpan/m_span;
+				for(size_t i = 0; i < m_correspondences.size(); i++) { 
+					double oldValue = m_correspondences.at(i).value;
+					m_correspondences.at(i).value = m_bias + change*(oldValue - m_bias); 
+				}
+				m_span = newSpan;
+			}
+
+			//Sets the values interval to [0.0, 1.0]
+			void normalizeSpan() { changeBiasTo(0.0); changeSpanTo(1.0); }
 
 	} colorInterpolation_t;
 		

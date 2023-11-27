@@ -58,7 +58,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::floats2Dfield_t* origin_ptr,
         return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
     }
 
-    for (int i = 0; i < lastIndexOrigin; i++) {
+    for (size_t i = 0; i < lastIndexOrigin; i++) {
         dest_ptr->data.get()[i] = (double)origin_ptr->data.get()[i];
     }
     
@@ -70,7 +70,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
 
     auto originSize = origin_ptr->size;
     auto destSize = dest_ptr->size;
-    int lastIndexOrigin = originSize.getMaxIndex();
+    size_t lastIndexOrigin = originSize.getMaxIndex();
     if (lastIndexOrigin != destSize.getMaxIndex()) {
         return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
     }
