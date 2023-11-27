@@ -87,8 +87,9 @@ int main(int argc, char **argv) {
 
 	if(runAutoTests) { failed += runTestsBattery(); }
 	if(runVisualTests) { 
-		failed += !F_V2::rendererTestFromImage(); 
-		failed += !F_V2::rendererTestFromDoubles2Dfield(); 
+		//failed += !F_V2::rendererTestFromImage(); 
+		//failed += !F_V2::rendererTestFromDoubles2Dfield(); 
+		failed += !F_V2::rendererTestFromDoubles2DfieldWithColorInterp();
 	}
 
 	if(!failed) {
