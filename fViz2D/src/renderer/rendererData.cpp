@@ -20,6 +20,24 @@ bool TEX::textureID_t::createOGLtexID(GLenum minFilter, GLenum magFilter) {
     return this->initialized;
 }
 
+F_V2::rendererRetCode_st TEX::loadTextureFromGeneric2DfieldPtr(IMG::generic2DfieldPtr_t* dataPtr_ptr, 
+                                                                       TEX::textureID_t* texture_ptr) {
+    
+    switch (dataPtr_ptr->getKindOfField()) {
+
+        case(IMG::kinds2Ddata::RGBA_IMAGE):
+            TEX::load4channelTextureFromRgbaImage(dataPtr_ptr->getFieldPtr().rgbaField_ptr, texture_ptr);
+            return F_V2::rendererRetCode_st::OK;
+
+        case(IMG::kinds2Ddata::FLOATS_FIELD):
+            TEX::loadR32FtextureFromFloats(dataPtr_ptr->getFieldPtr().floatsField_ptr, texture_ptr);
+            return F_V2::rendererRetCode_st::OK;
+
+        default:
+            return F_V2::rendererRetCode_st::BAD_DYNAMIC_DATA_FORMAT;
+    }
+}
+
 void TEX::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::textureID_t* texture_ptr) {
     if (!image_ptr->size.initialized) { texture_ptr->initialized = false; return; }
     if (!texture_ptr->initialized) { texture_ptr->createOGLtexID(); }
@@ -29,7 +47,7 @@ void TEX::load4channelTextureFromRgbaImage(IMG::rgbaImage_t* image_ptr, TEX::tex
 
     // Upload pixels into texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_ptr->size.width, image_ptr->size.height, 
-                 0, GL_RGBA, GL_UNSIGNED_BYTE, image_ptr->data);
+                 0, GL_RGBA, GL_UNSIGNED_BYTE, image_ptr->data.get());
 
     //TODO: check OGL errors and add return codes
 
@@ -48,7 +66,7 @@ void TEX::loadR32FtextureFromFloats(IMG::floats2Dfield_t* field_ptr, TEX::textur
 
     // Upload pixels into texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, field_ptr->size.width, field_ptr->size.height, 
-                 0, GL_RED, GL_FLOAT, field_ptr->data);
+                 0, GL_RED, GL_FLOAT, field_ptr->data.get());
 
     //TODO: check OGL errors and add return codes
 

@@ -9,32 +9,19 @@
 #include "resourcePaths.hpp"
 
 namespace F_V2 {
-	F_V2_API std::thread spawnRendererOnNewThread(bool* externalBool_ptr, IMG::rgbaImage_t* dynamicData_ptr, 
-									          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
-		                                      F_V2::rendererRetCode_st* returnCode_ptr, 
-		                                      const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
 
+	//dynamicData_ptr should hold either a rgbaImage_t or a floats2Dfield_t (see imageUtils.hpp)
+	//In case of a bad dynamicData_ptr type, returns BAD_DYNAMIC_DATA_FORMAT, otherwise returns OK
 	//TODO: ADD TEST
 	F_V2_API F_V2::rendererRetCode_st spawnRendererOnThisThread(bool* externalBool_ptr, 
-		                               IMG::rgbaImage_t* dynamicData_ptr, COLOR::rgbaF_t* clearColor_ptr, 
+		                               IMG::generic2DfieldPtr_t* dynamicData_ptr, COLOR::rgbaF_t* clearColor_ptr, 
 		                               COLOR::rgbaF_t* noiseTint_ptr, 
 		                               const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
 
-	///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	//TODO: CRITICAL: WARNING: THIS-IS-SO-UGLY :' ):
-	//load4channelTextureFromRgbaImage vs loadR32FtextureFromFloats need of IMG::rgbaImage_t* vs IMG::floats2Dfield_t*
-	//is the only thing keeping me from having all of this be a single thing, receiving a more general "IMG::2Ddata_t*"
-	//MAKE THAT WORK BEFOR BUILDING NEW FEATURES, PLS
-	///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-	F_V2_API std::thread spawnRendererOnNewThreadF(bool* externalBool_ptr, IMG::floats2Dfield_t* dynamicData_ptr, 
+	//dynamicData_ptr should hold either a rgbaImage_t or a floats2Dfield_t (see imageUtils.hpp)
+	//In case of a bad dynamicData_ptr type, returns "empty" thread and sets returnCode to BAD_DYNAMIC_DATA_FORMAT
+	F_V2_API std::thread spawnRendererOnNewThread(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 									          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
 		                                      F_V2::rendererRetCode_st* returnCode_ptr, 
 		                                      const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
-
-	//TODO: ADD TEST
-	F_V2_API F_V2::rendererRetCode_st spawnRendererOnThisThreadF(bool* externalBool_ptr, 
-		                               IMG::floats2Dfield_t* dynamicData_ptr, COLOR::rgbaF_t* clearColor_ptr, 
-		                               COLOR::rgbaF_t* noiseTint_ptr, 
-		                               const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
 }

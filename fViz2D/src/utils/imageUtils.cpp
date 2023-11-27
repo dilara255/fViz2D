@@ -4,7 +4,8 @@
 [[nodiscard]] IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
 
     IMG::rgbaImage_t image;
-    image.data = stbi_load(filename, (int*)&image.size.width, (int*)&image.size.height, NULL, 4);
+    image.data = 
+        std::unique_ptr<unsigned char>(stbi_load(filename, (int*)&image.size.width, (int*)&image.size.height, NULL, 4));
     image.size.initialized = true;
 
     return image;
@@ -25,7 +26,7 @@
 [[nodiscard]] IMG::doubles2Dfield_t IMG::createDoubles2Dfield(size_t width, size_t height) {
     IMG::doubles2Dfield_t newField;
 
-    newField.data = (double*)createBufferFor2Dfield(width, height, &newField.size);
+    newField.data = std::unique_ptr<double>((double*)createBufferFor2Dfield(width, height, &newField.size));
     
     return newField;
 }
@@ -33,7 +34,7 @@
 [[nodiscard]] IMG::floats2Dfield_t IMG::createFloats2Dfield(size_t width, size_t height) {
     IMG::floats2Dfield_t newField;
 
-    newField.data = (float*)createBufferFor2Dfield(width, height, &newField.size);
+    newField.data = std::unique_ptr<float>((float*)createBufferFor2Dfield(width, height, &newField.size));
     
     return newField;
 }
@@ -49,7 +50,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::floats2Dfield_t* origin_ptr,
     }
 
     for (int i = 0; i < lastIndexOrigin; i++) {
-        dest_ptr->data[i] = (double)origin_ptr->data[i];
+        dest_ptr->data.get()[i] = (double)origin_ptr->data.get()[i];
     }
     
     return F_V2::texRetCode_st::OK;
@@ -66,7 +67,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
     }
 
     for (int i = 0; i < lastIndexOrigin; i++) {
-        dest_ptr->data[i] = (float)origin_ptr->data[i];
+        dest_ptr->data.get()[i] = (float)origin_ptr->data.get()[i];
     }
     
     return F_V2::texRetCode_st::OK;

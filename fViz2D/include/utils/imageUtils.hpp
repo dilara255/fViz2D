@@ -7,6 +7,9 @@
 
 #include "returnCodes.hpp"
 
+#include <assert.h>
+#include <memory>
+
 namespace IMG {
 
 	typedef struct imgSizeInfo_st {
@@ -24,29 +27,55 @@ namespace IMG {
 	} imgSizeInfo_t;
 
 	typedef struct rgbaImage_st {
-		unsigned char* data;
+		std::unique_ptr<unsigned char> data = NULL;
 		imgSizeInfo_t size = {0, 0, 4, 1};
-		bool initialized = false;
-
-		~rgbaImage_st() { stbi_image_free(data); }
 	} rgbaImage_t;
 
 	// Loads rgbaImage_t from a file. The data buffer becomes a responsability of the caller.
 	rgbaImage_t load4channel8bpcImageFromFile(const char* filename);
 
-	typedef struct doubles2Dfield_st {
-		double* data;
-		imgSizeInfo_t size = {0, 0, 1, 8};
+	typedef struct floats2Dfield_st {
+		std::unique_ptr<float> data = NULL;
+		imgSizeInfo_t size = {0, 0, 1, 4};
+	} floats2Dfield_t;
 
-		~doubles2Dfield_st() { free(data); data = NULL; }
+	typedef struct doubles2Dfield_st {
+		std::unique_ptr<double> data = NULL;
+		imgSizeInfo_t size = {0, 0, 1, 8};
 	} doubles2Dfield_t;
 
-	typedef struct floats2Dfield_st {
-		float* data;
-		imgSizeInfo_t size = {0, 0, 1, 4};
+	//TODO: using union to represent general data type. Possibly should turn these into classes
+	enum class kinds2Ddata { UNINITIALIZED_UNION, RGBA_IMAGE, FLOATS_FIELD, DOUBLES_FIELD };
+	union generic2DfieldPtrs_u { 
+		rgbaImage_t* rgbaField_ptr = NULL; floats2Dfield_t* floatsField_ptr; doubles2Dfield_t* doublesField_ptr; 
+	};
 
-		~floats2Dfield_st() { free(data); data = NULL; }
-	} floats2Dfield_t;
+	typedef struct generic2DfieldPtr_st {
+
+		void storeRGBAfield(rgbaImage_t* rgbaField_ptr) { 
+			field_ptr.rgbaField_ptr = rgbaField_ptr; 
+			kindOfField = kinds2Ddata::RGBA_IMAGE; 
+		}
+
+		void storeFloatsField(floats2Dfield_t* floatsField_ptr) { 
+			field_ptr.floatsField_ptr = floatsField_ptr; 
+			kindOfField = kinds2Ddata::FLOATS_FIELD; 
+		}
+
+		void storeDoublesField(doubles2Dfield_t* doublesField_ptr) { 
+			field_ptr.doublesField_ptr = doublesField_ptr; 
+			kindOfField = kinds2Ddata::DOUBLES_FIELD; 
+		}
+
+		generic2DfieldPtrs_u getFieldPtr() { return field_ptr; }
+		kinds2Ddata getKindOfField() { return kindOfField; }
+
+		private:
+			kinds2Ddata kindOfField = kinds2Ddata::UNINITIALIZED_UNION;
+			generic2DfieldPtrs_u field_ptr;
+
+	} generic2DfieldPtr_t;
+	
 
 	//In case alocation fails, the field's "initialized" member will be false and width/height will be zero
 	doubles2Dfield_t createDoubles2Dfield(size_t width, size_t height);
