@@ -107,9 +107,12 @@ namespace F_V2 {
 
 		IMG::generic2DfieldPtr_t noiseDataPtr;
 		noiseDataPtr.storeFloatsField(&noiseToRender);
+		COLOR::colorInterpolation_t scheme;
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
 			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
+			                                 &scheme,
+									         std::string("Visual Test without Color Interpolation"),
 			                                 1024, 768);
 			
 		//TODO: prngg.hpp and then this : )
@@ -187,7 +190,7 @@ namespace F_V2 {
 		bool passedVisualInspection = false;
 
 		IMG::doubles2Dfield_st noiseInternal = IMG::createDoubles2Dfield(TEST_WIDTH, TEST_HEIGHT);
-		IMG::rgbaImage_st noiseToRender = IMG::createEmpty4channel8bpcImage(TEST_WIDTH, TEST_HEIGHT);
+		IMG::floats2Dfield_st noiseToRender = IMG::createFloats2Dfield(TEST_WIDTH, TEST_HEIGHT);
 		if (!noiseInternal.size.initialized || !noiseToRender.size.initialized) {
 			LOG_ERROR("Couldn't initialize fields\n"); GETCHAR_PAUSE;
 			return false;
@@ -199,10 +202,15 @@ namespace F_V2 {
 		COLOR::rgbaF_t clearColor = COLOR::FULL_WHITE;
 
 		IMG::generic2DfieldPtr_t noiseDataPtr;
-		noiseDataPtr.storeRGBAfield(&noiseToRender);
+		noiseDataPtr.storeFloatsField(&noiseToRender);
+		COLOR::colorInterpolation_t scheme;
+		scheme.loadScheme(&COLOR::defaultBlueYellowRedScheme);
+		scheme.normalizeSpan();
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
-			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode);
+			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
+			                                 &scheme,
+			                                 std::string("Visual Test with Color Interpolation"));
 			
 		//TODO: prngg.hpp and then this : )
 		std::vector<double> drawnPRNs;
@@ -217,9 +225,7 @@ namespace F_V2 {
 		
 		//Change the dynamic image while the rendering isn't done:
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
-		COLOR::colorInterpolation_t scheme;
-		scheme.loadScheme(&COLOR::defaultBlueYellowRedScheme);
-		scheme.normalizeSpan();
+		
 		while (returnCode == F_V2::rendererRetCode_st::STILL_RUNNING) {
 	
 			for (size_t i = 0; i < elements; i++) {
@@ -237,24 +243,10 @@ namespace F_V2 {
 			clearColor.g = effectiveClearColor;
 			clearColor.b = effectiveClearColor;
 
-			auto noiseToRenderData_ptr = noiseToRender.data.get();
-			auto imageSize_ptr = &(noiseToRender.size);
-			double effectiveValue;
-			COLOR::rgbaC_st interpolatedColor;
 			for (size_t i = 0; i < elements; i++) {
 				
-				effectiveValue = internalNoiseData_ptr[i] * effectiveNoiseTint * noiseTint.a;
-				effectiveValue += effectiveClearColor * (1.0 - noiseTint.a);
-
-				interpolatedColor = COLOR::interpolatedColorFromValue(effectiveValue, &scheme);
-				
-				double clampedEffectiveValue = std::clamp( effectiveValue, 0.0, 1.0);
-				unsigned char charColor = (unsigned char)(clampedEffectiveValue*255);
-
-				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::R)] = interpolatedColor.r;
-				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::G)] = interpolatedColor.g;
-				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::B)] = interpolatedColor.b;
-				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::A)] = 255;
+				noiseToRender.data.get()[i] = internalNoiseData_ptr[i] * effectiveNoiseTint * noiseTint.a;
+				noiseToRender.data.get()[i] += effectiveClearColor * (1.0 - noiseTint.a);
 			}
 
 			AZ::hybridBusySleepForMicros(std::chrono::microseconds(microsToSleepPerCycle));

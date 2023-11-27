@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/imageUtils.hpp"
+#include <algorithm>
 
 [[nodiscard]] IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
 
@@ -75,11 +76,31 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
         return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
     }
 
-    for (int i = 0; i < lastIndexOrigin; i++) {
+    for (size_t i = 0; i < lastIndexOrigin; i++) {
         dest_ptr->data.get()[i] = (float)origin_ptr->data.get()[i];
     }
     
     return F_V2::texRetCode_st::OK;
+}
+
+F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const generic2DfieldPtr_t* valuesField_ptr, 
+									                        rgbaImage_t* imageField_ptr, 
+															const COLOR::colorInterpolation_t* scheme_ptr) {
+    
+    IMG::kinds2Ddata kind = valuesField_ptr->getKindOfField();
+
+    switch (kind) {
+        case IMG::kinds2Ddata::UNINITIALIZED_UNION:
+            return F_V2::texRetCode_st::BAD_VALUE_FIELD;
+        case IMG::kinds2Ddata::RGBA_IMAGE:
+            return F_V2::texRetCode_st::OK;
+        case IMG::kinds2Ddata::FLOATS_FIELD:
+            return translateValuesToInterpolatedColors(valuesField_ptr->getConstFieldPtr().floatsField_ptr,
+                                                                                imageField_ptr, scheme_ptr);
+        case IMG::kinds2Ddata::DOUBLES_FIELD:
+            return translateValuesToInterpolatedColors(valuesField_ptr->getConstFieldPtr().doublesField_ptr,
+                                                                                 imageField_ptr, scheme_ptr);
+    }
 }
 
 F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const floats2Dfield_t* valuesField_ptr, 
@@ -144,11 +165,14 @@ COLOR::rgbaC_t COLOR::interpolateTwoColors(double t, const rgbaC_t* colorBefore_
     };
 }
 
-//Returns DEBUG_PINK_8B if an empty scheme is sent
+//If an empty scheme is passed, returns the "value" clamped and cast to 8 bits in the red channel
+//If an scheme with a single correspondence is passed or there's another error, returns DEBUG_PINK_8B
 COLOR::rgbaC_t COLOR::interpolatedColorFromValue(double value, const colorInterpolation_t* scheme_ptr) {
 
     size_t schemeSize = scheme_ptr->correspondences_ptr->size();
-    if (schemeSize < 2) { return COLOR::DEBUG_PINK_8B; }
+
+    if(schemeSize == 0) { return { (unsigned char)(std::clamp(value, 0.0, 1.0)*255), 0, 0, 255 }; }
+    if(schemeSize == 1) { return COLOR::DEBUG_PINK_8B; }
    
     size_t indexLargerValue = 0;
     auto correspondences_ptr = scheme_ptr->correspondences_ptr;
@@ -177,12 +201,13 @@ COLOR::rgbaC_t COLOR::interpolatedColorFromValue(double value, const colorInterp
     rgbaC_t finalColor;
 
     //Then we deal with the cases where the value is outside the extremes:
-    if(value < correspondences_ptr->at(0).value) { finalColor = correspondences_ptr->at(0).color; }
-    else if(value > correspondences_ptr->back().value) { finalColor = correspondences_ptr->back().color; }
+    if(value <= correspondences_ptr->at(0).value) { finalColor = correspondences_ptr->at(0).color; }
+    else if(value >= correspondences_ptr->back().value) { finalColor = correspondences_ptr->back().color; }
     //Or interpolate between the values we got before in case it's within the extremes:
     else {
     
         double valueSpan = valueAfter - valueBefore;
+
         assert(valueSpan > 0);
 
         double t = (value - valueBefore)/valueSpan;

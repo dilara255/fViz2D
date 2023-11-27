@@ -2,6 +2,7 @@
 
 //TODO: review: some stuff here probably could be made more general to support more types (template?)
 //TODO-CRITICAL: write tests for this stuff
+//TODO: maybe generic data type could be generic only on the pointer to data, and hold size directly?
 
 #include "GLFW/glfw3.h"
 #include "stbImage/stb_image.h"
@@ -78,6 +79,7 @@ namespace COLOR {
 
 	typedef std::vector<value8bitColorPair_t> schemeVector_t;
 	
+	static const schemeVector_t defaultPassThroughScheme = {};
 	static const schemeVector_t defaultBWscheme = { value8bitColorPair_t{ 0.0, FULL_BLACK_8B }, 
 		                                            value8bitColorPair_t{ 1.0, FULL_WHITE_8B } };
 	static const schemeVector_t defaultBlueRedScheme = { value8bitColorPair_t{-0.5, FULL_BLUE_8B }, 
@@ -88,7 +90,7 @@ namespace COLOR {
 															   value8bitColorPair_t{ 1.0, FULL_RED_8B }, 
 		                                                       value8bitColorPair_t{ 1.5, FULL_WHITE_8B } };
 
-	//Insertions guarantees that values are in increasing order
+	//Insertions guarantee that values are in increasing order
 	typedef struct colorInterpolation_st {
 		private:
 			schemeVector_t m_correspondences;
@@ -112,10 +114,13 @@ namespace COLOR {
 			}
 
 			void loadScheme(const schemeVector_t* schemeToLoad_ptr) { 
-				m_correspondences.clear();
+				if(!m_correspondences.empty()) { m_correspondences.clear(); }
 				m_correspondences = *schemeToLoad_ptr;
-				m_bias = m_correspondences.at(0).value;
-				m_span = m_correspondences.back().value - m_bias;
+				if(!m_correspondences.empty()) {
+					m_bias = m_correspondences.at(0).value;
+					m_span = m_correspondences.back().value - m_bias;
+				}
+				else { m_bias = 0.0, m_span = 0.0; }
 			}
 
 			void changeBiasTo(double newBias) {
@@ -217,7 +222,23 @@ namespace IMG {
 		}
 
 		generic2DfieldPtrs_u getFieldPtr() { return field_ptr; }
-		kinds2Ddata getKindOfField() { return kindOfField; }
+		const generic2DfieldPtrs_u getConstFieldPtr() const { return field_ptr; }
+		kinds2Ddata getKindOfField() const { return kindOfField; }
+		
+		//Returns nullptr in case the field is not initialized
+		const imgSizeInfo_t* getSizeInfo_ptr() const { 
+
+			switch(kindOfField) {
+				case kinds2Ddata::UNINITIALIZED_UNION:
+					return nullptr;
+				case kinds2Ddata::RGBA_IMAGE:
+					return &(field_ptr.rgbaField_ptr->size);
+				case kinds2Ddata::FLOATS_FIELD:
+					return &(field_ptr.floatsField_ptr->size);
+				case kinds2Ddata::DOUBLES_FIELD:
+					return &(field_ptr.doublesField_ptr->size);
+			} 
+		}
 
 		private:
 			kinds2Ddata kindOfField = kinds2Ddata::UNINITIALIZED_UNION;
@@ -234,8 +255,12 @@ namespace IMG {
 	F_V2::texRetCode_st copy2Dfield(const floats2Dfield_t* floatOrigin_ptr, doubles2Dfield_t* doubleDest_ptr);
 	F_V2::texRetCode_st copy2Dfield(const doubles2Dfield_t* doubleOrigin_ptr, floats2Dfield_t* floatDest_ptr);
 
-	//Expects values and image fields to have the same amount of "pixels" (same width * height)
-	//Expects the scheme to have at least two points
+	//These expects values and image fields to have the same amount of "pixels" (same width * height)
+	//They also expects the scheme to have at least two points. Return OK on success.
+	//If the valuesField_ptr kind is already an image, the generic version won't do anything
+	F_V2::texRetCode_st translateValuesToInterpolatedColors(const generic2DfieldPtr_t* valuesField_ptr, 
+									                        rgbaImage_t* imageField_ptr, 
+															const COLOR::colorInterpolation_t* scheme_ptr);
 	F_V2::texRetCode_st translateValuesToInterpolatedColors(const floats2Dfield_t* valuesField_ptr, 
 									                        rgbaImage_t* imageField_ptr, 
 															const COLOR::colorInterpolation_t* scheme_ptr);
