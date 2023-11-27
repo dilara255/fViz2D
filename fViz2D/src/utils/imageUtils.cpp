@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "utils/imageUtils.hpp"
+#include <algorithm>
 
 [[nodiscard]] IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
 
@@ -75,7 +76,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
         return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
     }
 
-    for (int i = 0; i < lastIndexOrigin; i++) {
+    for (size_t i = 0; i < lastIndexOrigin; i++) {
         dest_ptr->data.get()[i] = (float)origin_ptr->data.get()[i];
     }
     
@@ -144,11 +145,14 @@ COLOR::rgbaC_t COLOR::interpolateTwoColors(double t, const rgbaC_t* colorBefore_
     };
 }
 
-//Returns DEBUG_PINK_8B if an empty scheme is sent
+//If an empty scheme is passed, returns the "value" clamped and cast to 8 bits in the red channel
+//If an scheme with a single correspondence is passed or there's another error, returns DEBUG_PINK_8B
 COLOR::rgbaC_t COLOR::interpolatedColorFromValue(double value, const colorInterpolation_t* scheme_ptr) {
 
     size_t schemeSize = scheme_ptr->correspondences_ptr->size();
-    if (schemeSize < 2) { return COLOR::DEBUG_PINK_8B; }
+
+    if(schemeSize == 0) { return { (unsigned char)(std::clamp(value, 0.0, 1.0)*255), 0, 0, 255 }; }
+    if(schemeSize == 1) { return COLOR::DEBUG_PINK_8B; }
    
     size_t indexLargerValue = 0;
     auto correspondences_ptr = scheme_ptr->correspondences_ptr;

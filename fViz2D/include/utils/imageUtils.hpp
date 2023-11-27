@@ -78,6 +78,7 @@ namespace COLOR {
 
 	typedef std::vector<value8bitColorPair_t> schemeVector_t;
 	
+	static const schemeVector_t defaultPassThroughScheme = {};
 	static const schemeVector_t defaultBWscheme = { value8bitColorPair_t{ 0.0, FULL_BLACK_8B }, 
 		                                            value8bitColorPair_t{ 1.0, FULL_WHITE_8B } };
 	static const schemeVector_t defaultBlueRedScheme = { value8bitColorPair_t{-0.5, FULL_BLUE_8B }, 
@@ -112,10 +113,13 @@ namespace COLOR {
 			}
 
 			void loadScheme(const schemeVector_t* schemeToLoad_ptr) { 
-				m_correspondences.clear();
+				if(!m_correspondences.empty()) { m_correspondences.clear(); }
 				m_correspondences = *schemeToLoad_ptr;
-				m_bias = m_correspondences.at(0).value;
-				m_span = m_correspondences.back().value - m_bias;
+				if(!m_correspondences.empty()) {
+					m_bias = m_correspondences.at(0).value;
+					m_span = m_correspondences.back().value - m_bias;
+				}
+				else { m_bias = 0.0, m_span = 0.0; }
 			}
 
 			void changeBiasTo(double newBias) {
