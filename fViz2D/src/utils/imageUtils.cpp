@@ -23,6 +23,15 @@
     return data_ptr;
 }
 
+//In case alocation fails, the field's "initialized" member will be false and width/height will be zero
+[[nodiscard]] IMG::rgbaImage_t IMG::createEmpty4channel8bpcImage(size_t width, size_t height) {
+    IMG::rgbaImage_t newField;
+
+    newField.data = std::unique_ptr<unsigned char>((unsigned char*)createBufferFor2Dfield(width, height, &newField.size));
+    
+    return newField;
+}
+
 [[nodiscard]] IMG::doubles2Dfield_t IMG::createDoubles2Dfield(size_t width, size_t height) {
     IMG::doubles2Dfield_t newField;
 
@@ -43,7 +52,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::floats2Dfield_t* origin_ptr,
                                            IMG::doubles2Dfield_t* dest_ptr) {
 
     auto originSize = origin_ptr->size;
-    auto destSize = origin_ptr->size;
+    auto destSize = dest_ptr->size;
     size_t lastIndexOrigin = originSize.getMaxIndex();
     if (lastIndexOrigin != destSize.getMaxIndex()) {
         return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
@@ -60,7 +69,7 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
                                                IMG::floats2Dfield_t* dest_ptr) {
 
     auto originSize = origin_ptr->size;
-    auto destSize = origin_ptr->size;
+    auto destSize = dest_ptr->size;
     int lastIndexOrigin = originSize.getMaxIndex();
     if (lastIndexOrigin != destSize.getMaxIndex()) {
         return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
@@ -71,4 +80,115 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
     }
     
     return F_V2::texRetCode_st::OK;
+}
+
+F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const floats2Dfield_t* valuesField_ptr, 
+									                        rgbaImage_t* imageField_ptr, 
+															const COLOR::colorInterpolation_t* scheme_ptr) {
+
+    auto originSize = valuesField_ptr->size;
+    auto destSize = imageField_ptr->size;
+    if (originSize.getTotalArea() != destSize.getTotalArea()) {
+        return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
+    }
+
+    COLOR::rgbaC_t pixelColor;
+    auto imageData_ptr = imageField_ptr->data.get();
+
+    for (size_t i = 0; i < originSize.getMaxIndex(); i++) {
+        pixelColor = COLOR::interpolatedColorFromValue(valuesField_ptr->data.get()[i], scheme_ptr);
+
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::R)] = pixelColor.r;
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::G)] = pixelColor.g;
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::B)] = pixelColor.b;
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::A)] = pixelColor.a;
+    }
+
+    return F_V2::texRetCode_st::OK;
+}
+
+F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const doubles2Dfield_t* valuesField_ptr, 
+															rgbaImage_t* imageField_ptr, 
+															const COLOR::colorInterpolation_t* scheme_ptr) {
+
+    auto originSize = valuesField_ptr->size;
+    auto destSize = imageField_ptr->size;
+    if (originSize.getTotalArea() != destSize.getTotalArea()) {
+        return F_V2::texRetCode_st::SIZES_DONT_MATCH_FOR_COPY;
+    }
+
+    COLOR::rgbaC_t pixelColor;
+    auto imageData_ptr = imageField_ptr->data.get();
+
+    for (size_t i = 0; i < originSize.getMaxIndex(); i++) {
+        pixelColor = COLOR::interpolatedColorFromValue(valuesField_ptr->data.get()[i], scheme_ptr);
+
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::R)] = pixelColor.r;
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::G)] = pixelColor.g;
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::B)] = pixelColor.b;
+        imageData_ptr[destSize.getLinearIndexOfChannel(i, COLOR::A)] = pixelColor.a;
+    }
+
+    return F_V2::texRetCode_st::OK;
+}
+
+COLOR::rgbaC_t COLOR::interpolateTwoColors(double t, const rgbaC_t* colorBefore_ptr, const rgbaC_t* colorAfter_ptr) {
+
+    double oneMinusT = 1 - t;
+
+    return { 
+        (unsigned char)( oneMinusT*colorBefore_ptr->r + t*colorAfter_ptr->r ) , 
+        (unsigned char)( oneMinusT*colorBefore_ptr->g + t*colorAfter_ptr->g ) ,
+        (unsigned char)( oneMinusT*colorBefore_ptr->b + t*colorAfter_ptr->b ) ,
+        (unsigned char)( oneMinusT*colorBefore_ptr->a + t*colorAfter_ptr->a )
+    };
+}
+
+//Returns DEBUG_PINK_8B if an empty scheme is sent
+COLOR::rgbaC_t COLOR::interpolatedColorFromValue(double value, const colorInterpolation_t* scheme_ptr) {
+
+    size_t schemeSize = scheme_ptr->correspondences_ptr->size();
+    if (schemeSize < 2) { return COLOR::DEBUG_PINK_8B; }
+   
+    size_t indexLargerValue = 0;
+    auto correspondences_ptr = scheme_ptr->correspondences_ptr;
+    while ( (indexLargerValue < schemeSize) && (correspondences_ptr->at(indexLargerValue).value < value)) {
+        indexLargerValue++;
+    }
+
+    //We first guess the extremes:
+    rgbaC_t colorBefore = correspondences_ptr->at(0).color;
+    double valueBefore = correspondences_ptr->at(0).value;
+    rgbaC_t colorAfter = correspondences_ptr->back().color;
+    double valueAfter = correspondences_ptr->back().value;
+
+    //In case the value is into or after the first interval, we set the before values:
+    if(indexLargerValue > 0) { 
+        colorBefore = correspondences_ptr->at(indexLargerValue - 1).color; 
+        valueBefore = correspondences_ptr->at(indexLargerValue - 1).value;
+    }
+    
+    //In case the value is into or before the last interval, we set the after values:
+    if(indexLargerValue < schemeSize) {
+        colorAfter = correspondences_ptr->at(indexLargerValue).color; 
+        valueAfter = correspondences_ptr->at(indexLargerValue).value; 
+    }
+
+    rgbaC_t finalColor;
+
+    //Then we deal with the cases where the value is outside the extremes:
+    if(value < correspondences_ptr->at(0).value) { finalColor = correspondences_ptr->at(0).color; }
+    else if(value > correspondences_ptr->back().value) { finalColor = correspondences_ptr->back().color; }
+    //Or interpolate between the values we got before in case it's within the extremes:
+    else {
+    
+        double valueSpan = valueAfter - valueBefore;
+        assert(valueSpan > 0);
+
+        double t = (value - valueBefore)/valueSpan;
+
+        finalColor = interpolateTwoColors(t, &colorBefore, &colorAfter);
+    }
+
+    return finalColor;
 }

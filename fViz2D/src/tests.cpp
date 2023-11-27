@@ -9,6 +9,8 @@
 
 #include "prng.hpp"
 
+#include <algorithm>
+
 namespace F_V2 {
 
 	bool linkAndLogTest(void) {
@@ -172,6 +174,95 @@ namespace F_V2 {
 
 		if (passedVisualInspection) { LOG_INFO("Visual test passed! (texture hot-reload from field of doubles)"); }
 		else { LOG_ERROR("Visual test failed! (texture hot-reload from field of doubles)"); }
+
+		GETCHAR_PAUSE;
+
+		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
+	}
+
+	bool rendererTestFromDoubles2DfieldWithColorInterp() {
+
+		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles and show it with a color scheme\n"); GETCHAR_PAUSE;
+
+		bool passedVisualInspection = false;
+
+		IMG::doubles2Dfield_st noiseInternal = IMG::createDoubles2Dfield(TEST_WIDTH, TEST_HEIGHT);
+		IMG::rgbaImage_st noiseToRender = IMG::createEmpty4channel8bpcImage(TEST_WIDTH, TEST_HEIGHT);
+		if (!noiseInternal.size.initialized || !noiseToRender.size.initialized) {
+			LOG_ERROR("Couldn't initialize fields\n"); GETCHAR_PAUSE;
+			return false;
+		}
+
+		F_V2::rendererRetCode_st returnCode = F_V2::rendererRetCode_st::STILL_RUNNING;
+		COLOR::rgbaF_t noiseTint = COLOR::FULL_WHITE;
+		noiseTint.a = (float)100/255; //just to show a bit of the clear color by default
+		COLOR::rgbaF_t clearColor = COLOR::FULL_WHITE;
+
+		IMG::generic2DfieldPtr_t noiseDataPtr;
+		noiseDataPtr.storeRGBAfield(&noiseToRender);
+
+		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
+			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode);
+			
+		//TODO: prngg.hpp and then this : )
+		std::vector<double> drawnPRNs;
+		size_t elements = noiseInternal.size.getTotalElements();
+		drawnPRNs.reserve(elements);
+		uint64_t seed = DEFAULT_PRNG_SEED0;
+
+		auto internalNoiseData_ptr = noiseInternal.data.get();
+		for (size_t i = 0; i < elements; i++) {
+			internalNoiseData_ptr[i] = (double)AZ::draw1spcg32(&seed)/UINT32_MAX;
+		}
+		
+		//Change the dynamic image while the rendering isn't done:
+		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
+		COLOR::colorInterpolation_t scheme;
+		scheme.loadScheme(&COLOR::defaultBlueYellowRedScheme);
+		while (returnCode == F_V2::rendererRetCode_st::STILL_RUNNING) {
+	
+			for (size_t i = 0; i < elements; i++) {
+				internalNoiseData_ptr[i] += ( ((double)AZ::draw1spcg32(&seed)/UINT32_MAX) / 120.0);
+				internalNoiseData_ptr[i] -= 1 * (internalNoiseData_ptr[i] > 1.0);
+			}
+
+			float effectiveNoiseTint = noiseTint.r/3 + noiseTint.g/3 + noiseTint.b/3;
+			noiseTint.r = effectiveNoiseTint;
+			noiseTint.g = effectiveNoiseTint;
+			noiseTint.b = effectiveNoiseTint;
+
+			float effectiveClearColor = clearColor.r/3 + clearColor.g/3 + clearColor.b/3;
+			clearColor.r = effectiveClearColor;
+			clearColor.g = effectiveClearColor;
+			clearColor.b = effectiveClearColor;
+
+			auto noiseToRenderData_ptr = noiseToRender.data.get();
+			auto imageSize_ptr = &(noiseToRender.size);
+			double effectiveValue;
+			COLOR::rgbaC_st interpolatedColor;
+			for (size_t i = 0; i < elements; i++) {
+				
+				effectiveValue = internalNoiseData_ptr[i] * effectiveNoiseTint * noiseTint.a;
+				effectiveValue += effectiveClearColor * (1.0 - noiseTint.a);
+
+				interpolatedColor = COLOR::interpolatedColorFromValue(effectiveValue, &scheme);
+				
+				double clampedEffectiveValue = std::clamp( effectiveValue, 0.0, 1.0);
+				unsigned char charColor = (unsigned char)(clampedEffectiveValue*255);
+
+				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::R)] = interpolatedColor.r;
+				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::G)] = interpolatedColor.g;
+				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::B)] = interpolatedColor.b;
+				noiseToRenderData_ptr[imageSize_ptr->getLinearIndexOfChannel(i, COLOR::A)] = 255;
+			}
+
+			AZ::hybridBusySleepForMicros(std::chrono::microseconds(microsToSleepPerCycle));
+		}
+
+		testRendererThread.join(); //done rendering
+
+		if (passedVisualInspection) { LOG_INFO("Visual test passed! (texture hot-reload from field of doubles with color scheme)"); }
+		else { LOG_ERROR("Visual test failed! (texture hot-reload from field of doubles with color scheme)"); }
 
 		GETCHAR_PAUSE;
 
