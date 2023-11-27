@@ -81,9 +81,24 @@ namespace F_V2 {
 		if (passedVisualInspection) { LOG_INFO("Visual test passed! (texture hot-reload from dynamic image)"); }
 		else { LOG_ERROR("Visual test failed! (texture hot-reload from dynamic image)"); }
 
+		LOG_DEBUG("Will try to save test images");
+
+		F_V2::imageFileRetCode_st savesReturn;
+		bool savedFine = true;
+
+		savesReturn = IMG::saveImage(&tintedDynamicTestDataPtr, "imageSavingTest1_100", IMG::imageType::JPG, 100);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+		savesReturn = IMG::saveImage(&tintedDynamicTestDataPtr, "imageSavingTest1_10", IMG::imageType::JPG, 10);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+		savesReturn = IMG::saveImage(&tintedDynamicTestDataPtr, "imageSavingTest1", IMG::imageType::PNG);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+
+		if(savedFine) { LOG_INFO("Test images saved on the default folder!"); }
+		else { LOG_ERROR("Error saving test images"); }
+
 		GETCHAR_PAUSE;
 
-		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
+		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK) && savedFine;
 	}
 
 	#define TEST_WIDTH 512
@@ -182,6 +197,21 @@ namespace F_V2 {
 		if (passedVisualInspection) { LOG_INFO("Visual test passed! (texture hot-reload from field of doubles)"); }
 		else { LOG_ERROR("Visual test failed! (texture hot-reload from field of doubles)"); }
 
+		LOG_DEBUG("Will try to save test images");
+
+		F_V2::imageFileRetCode_st savesReturn;
+		bool savedFine = true;
+
+		savesReturn = IMG::saveImage(&noiseDataPtr, "imageSavingTest2_100", IMG::imageType::JPG, 100);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+		savesReturn = IMG::saveImage(&noiseDataPtr, "imageSavingTest2_10", IMG::imageType::JPG, 10);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+		savesReturn = IMG::saveImage(&noiseDataPtr, "imageSavingTest2", IMG::imageType::PNG);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+
+		if(savedFine) { LOG_INFO("Test images saved on the default folder!"); }
+		else { LOG_ERROR("Error saving test images"); }
+
 		GETCHAR_PAUSE;
 
 		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
@@ -262,6 +292,19 @@ namespace F_V2 {
 
 		if (passedVisualInspection) { LOG_INFO("Visual test passed! (texture hot-reload from field of doubles with color scheme)"); }
 		else { LOG_ERROR("Visual test failed! (texture hot-reload from field of doubles with color scheme)"); }
+
+		F_V2::imageFileRetCode_st savesReturn;
+		bool savedFine = true;
+
+		savesReturn = IMG::saveImage(&noiseDataPtr, "imageSavingTest3_100", IMG::imageType::JPG, 100);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+		savesReturn = IMG::saveImage(&noiseDataPtr, "imageSavingTest3_10", IMG::imageType::JPG, 10);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+		savesReturn = IMG::saveImage(&noiseDataPtr, "imageSavingTest3", IMG::imageType::PNG);
+		if(savesReturn != F_V2::imageFileRetCode_st::OK) { savedFine &= false; }
+
+		if(savedFine) { LOG_INFO("Test images saved on the default folder!"); }
+		else { LOG_ERROR("Error saving test images"); }
 
 		GETCHAR_PAUSE;
 

@@ -1,6 +1,40 @@
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "utils/imageUtils.hpp"
 #include <algorithm>
+
+F_V2::imageFileRetCode_st IMG::saveImage(const generic2DfieldPtr_t* image_ptr, std::string filename, 
+		                                            imageType_t type, int quality, std::string path) {
+
+	kinds2Ddata kind = image_ptr->getKindOfField();
+	if(kind == kinds2Ddata::UNINITIALIZED_UNION) { return F_V2::imageFileRetCode_st::BAD_DATA_TO_SAVE; }
+
+	auto sizeInfo_ptr = image_ptr->getSizeInfo_ptr();
+	int w = (int)sizeInfo_ptr->width;
+	int h = (int)sizeInfo_ptr->height;
+	int comp = sizeInfo_ptr->channels;
+
+	std::string fullPath = path + filename;
+	int internalReturn;
+
+	switch (type) {
+		case(imageType_t::JPG):
+            fullPath += ".jpg";
+			internalReturn = 
+				stbi_write_jpg(fullPath.c_str(), w, h, comp, image_ptr->getVoidData_ptr(), quality);
+			break;
+		case(imageType_t::PNG):
+            fullPath += ".png";
+			internalReturn = 
+				stbi_write_png(fullPath.c_str(), w, h, comp, image_ptr->getVoidData_ptr(), 
+						                            (int)sizeInfo_ptr->getStrideInBytes());
+			break;
+	}
+		
+	if(internalReturn) { return F_V2::imageFileRetCode_st::OK; }
+	else { return F_V2::imageFileRetCode_st::SAVE_FAILED; }
+}
 
 [[nodiscard]] IMG::rgbaImage_t IMG::load4channel8bpcImageFromFile(const char* filename) {
 
