@@ -219,6 +219,7 @@ namespace F_V2 {
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
 		COLOR::colorInterpolation_t scheme;
 		scheme.loadScheme(&COLOR::defaultBlueYellowRedScheme);
+		scheme.normalizeSpan();
 		while (returnCode == F_V2::rendererRetCode_st::STILL_RUNNING) {
 	
 			for (size_t i = 0; i < elements; i++) {
