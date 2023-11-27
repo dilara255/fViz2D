@@ -6,6 +6,9 @@
 
 #include "GLFW/glfw3.h"
 #include "stbImage/stb_image.h"
+#include "stbImage/stb_image_write.h"
+
+#include "miscStdHeaders.h"
 
 #include "returnCodes.hpp"
 
@@ -162,20 +165,21 @@ namespace IMG {
 		size_t bytesPerChannel;
 		bool initialized = false;
 
-		size_t getStride() { return channels * width; }
+		size_t getStride() const { return channels * width; }
+		size_t getStrideInBytes() const { return channels * width * bytesPerChannel; }
 		//Will return a bad index if bad parameters are passed on release
-		size_t getIndex(uint32_t row, uint32_t collumn, uint8_t channel) {
+		size_t getIndex(uint32_t row, uint32_t collumn, uint8_t channel) const {
 			assert( (row < height) && (collumn < width) && (channel < channels) );
 			return (row * getStride()) + (collumn * channels) + channel;
 		}
 		//Will return a bad index if bad parameters are passed on release
-		size_t getLinearIndexOfChannel(size_t element, size_t channel) {
+		size_t getLinearIndexOfChannel(size_t element, size_t channel) const {
 			assert( (element < height * width) && (channel < channels) );
 			return ( (channels * element) + channel);
 		}
-		size_t getMaxIndex() { return ( (channels * width * height) - 1 ); }
-		size_t getTotalElements() { return channels * width * height; }
-		size_t getTotalArea() { return width * height; }
+		size_t getMaxIndex() const { return ( (channels * width * height) - 1 ); }
+		size_t getTotalElements() const { return channels * width * height; }
+		size_t getTotalArea() const { return width * height; }
 	} imgSizeInfo_t;
 
 	typedef struct rgbaImage_st {
@@ -240,6 +244,21 @@ namespace IMG {
 			} 
 		}
 
+		//Returns nullptr in case the field is not initialized
+		const void* getVoidData_ptr() const { 
+
+			switch(kindOfField) {
+				case kinds2Ddata::UNINITIALIZED_UNION:
+					return nullptr;
+				case kinds2Ddata::RGBA_IMAGE:
+					return (void*)(field_ptr.rgbaField_ptr->data.get());
+				case kinds2Ddata::FLOATS_FIELD:
+					return (void*)(field_ptr.floatsField_ptr->data.get());
+				case kinds2Ddata::DOUBLES_FIELD:
+					return (void*)(field_ptr.doublesField_ptr->data.get());
+			} 
+		}
+
 		private:
 			kinds2Ddata kindOfField = kinds2Ddata::UNINITIALIZED_UNION;
 			generic2DfieldPtrs_u field_ptr;
@@ -267,4 +286,12 @@ namespace IMG {
 	F_V2::texRetCode_st translateValuesToInterpolatedColors(const doubles2Dfield_t* valuesField_ptr, 
 															rgbaImage_t* imageField_ptr, 
 															const COLOR::colorInterpolation_t* scheme_ptr);
+
+	typedef enum class imageType { PNG, JPG } imageType_t;
+
+	//TODO: for now, "path" should include the slash. Change this and make it portable (possibly use fAux)
+	//Quality affects quality only when type is JPG
+	//Returns error code on errors or OK on success
+	F_V2::imageFileRetCode_st saveImage(const generic2DfieldPtr_t* image_ptr, std::string filename, 
+		                                imageType_t type, int quality = 100, std::string path = "");
 }
