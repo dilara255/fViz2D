@@ -42,12 +42,13 @@ void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr,
 
 F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                             COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr,
+                                            COLOR::colorInterpolation_t* scheme_ptr = nullptr,
+                                            std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
                                             int width = 800, int height = 600,
                                             const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     //INIT:
-    GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, width, height, 
-                                                   "Ogl3 Render Test - imGui + Glfw");
+    GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, width, height, windowName.c_str());
     if(window == nullptr) { return rendererRetCode_st::CONTEXT_ACQ_FAILED; }
 
     ImGuiIO& io = GUI::initImgui(window, "#version 330");
@@ -64,13 +65,40 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic
     if(retCode != F_V2::rendererRetCode_st::OK) { return retCode; }
     if(!dynamicTexture.initialized) { return rendererRetCode_st::DYNAMIC_IMAGE_INITIAL_LOAD_FAILED; }
 
-    //RUN:
+    //Prepare rgba buffer in case the scheme and data type will need it:
     bool keepRunning = true;
+    IMG::kinds2Ddata kind = dynamicData_ptr->getKindOfField();
+    IMG::generic2DfieldPtr_t colorInterpolationField;
+    IMG::generic2DfieldPtr_t* fieldToPassToTexture_ptr = dynamicData_ptr; //may switch later
+    bool shouldInterpolateColors = (scheme_ptr != nullptr) && (scheme_ptr->correspondences_ptr->size() >= 2) && 
+                             (kind == IMG::kinds2Ddata::FLOATS_FIELD || kind == IMG::kinds2Ddata::DOUBLES_FIELD);
+    
+    auto size_ptr = dynamicData_ptr->getSizeInfo_ptr();
+    size_t imageWidth = size_ptr->width;
+    size_t imageHeight = size_ptr->height;    
+
+    IMG::rgbaImage_t rgbaImage;
+    if(shouldInterpolateColors) {
+        rgbaImage = IMG::createEmpty4channel8bpcImage(imageWidth, imageHeight);
+        colorInterpolationField.storeRGBAfield(&rgbaImage);
+        fieldToPassToTexture_ptr = &colorInterpolationField;
+    }
+    
+    F_V2::texRetCode_st colorInterpReturn = F_V2::texRetCode_st::OK;
+
+    //RUN:
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
         render(window, io, clearColor_ptr, &bannerTexture, &dynamicTexture, noiseTint_ptr, 
                                                            &keepRunning, externalBool_ptr);
-        TEX::loadTextureFromGeneric2DfieldPtr(dynamicData_ptr, &dynamicTexture); //TODO: not checking return
+        
+        //TODO: not really checking return of these
+        if(shouldInterpolateColors) {
+            colorInterpReturn = IMG::translateValuesToInterpolatedColors(dynamicData_ptr, &rgbaImage, scheme_ptr);
+            assert(colorInterpReturn == F_V2::texRetCode_st::OK);
+        }
+
+        TEX::loadTextureFromGeneric2DfieldPtr(fieldToPassToTexture_ptr, &dynamicTexture);
     }
 
     //END:
@@ -83,12 +111,14 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, IMG::generic
 void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2DfieldPtr_t* dynamicData_ptr, 
                                          COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
                                          F_V2::rendererRetCode_st* returnCode_ptr, 
+                                         COLOR::colorInterpolation_t* scheme_ptr = {},
+                                         std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
                                          int width = 800, int height = 600, 
                                          const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary) {
 
     *returnCode_ptr = 
-        F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, width, height,
-                                                                                      bannerPathFromBinary);
+        F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, scheme_ptr, 
+                                                        windowName, width, height, bannerPathFromBinary);
     return;
 }
 
@@ -97,21 +127,25 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, IMG::generic2Df
                                                          COLOR::rgbaF_t* clearColor_ptr, 
                                                          COLOR::rgbaF_t* noiseTint_ptr, 
                                                          F_V2::rendererRetCode_st* returnCode_ptr, 
+                                                         COLOR::colorInterpolation_t* scheme_ptr,
+                                                         std::string windowName,
                                                          int width, int height, 
                                                          const char* bannerPathFromBinary) {
 
     return std::thread(F_V2::rendererMainForSeparateThread, externalBool_ptr, dynamicData_ptr, clearColor_ptr, 
-                                                            noiseTint_ptr, returnCode_ptr, width, height,
-                                                            bannerPathFromBinary);
+                                                            noiseTint_ptr, returnCode_ptr, scheme_ptr,
+                                                            windowName, width, height, bannerPathFromBinary);
 }
 
 F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(bool* externalBool_ptr, 
                                                          IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 									                     COLOR::rgbaF_t* clearColor_ptr, 
                                                          COLOR::rgbaF_t* noiseTint_ptr, 
+                                                         COLOR::colorInterpolation_t* scheme_ptr,
+                                                         std::string windowName,
                                                          int width, int height, 
 		                                                 const char* bannerPathFromBinary){
 
-    return F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, width, height, 
-                                                                                         bannerPathFromBinary);
+    return F_V2::rendererMain(externalBool_ptr, dynamicData_ptr, clearColor_ptr, noiseTint_ptr, scheme_ptr,
+                                                           windowName, width, height, bannerPathFromBinary);
 }

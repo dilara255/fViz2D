@@ -83,6 +83,26 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
     return F_V2::texRetCode_st::OK;
 }
 
+F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const generic2DfieldPtr_t* valuesField_ptr, 
+									                        rgbaImage_t* imageField_ptr, 
+															const COLOR::colorInterpolation_t* scheme_ptr) {
+    
+    IMG::kinds2Ddata kind = valuesField_ptr->getKindOfField();
+
+    switch (kind) {
+        case IMG::kinds2Ddata::UNINITIALIZED_UNION:
+            return F_V2::texRetCode_st::BAD_VALUE_FIELD;
+        case IMG::kinds2Ddata::RGBA_IMAGE:
+            return F_V2::texRetCode_st::OK;
+        case IMG::kinds2Ddata::FLOATS_FIELD:
+            return translateValuesToInterpolatedColors(valuesField_ptr->getConstFieldPtr().floatsField_ptr,
+                                                                                imageField_ptr, scheme_ptr);
+        case IMG::kinds2Ddata::DOUBLES_FIELD:
+            return translateValuesToInterpolatedColors(valuesField_ptr->getConstFieldPtr().doublesField_ptr,
+                                                                                 imageField_ptr, scheme_ptr);
+    }
+}
+
 F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const floats2Dfield_t* valuesField_ptr, 
 									                        rgbaImage_t* imageField_ptr, 
 															const COLOR::colorInterpolation_t* scheme_ptr) {
@@ -181,12 +201,13 @@ COLOR::rgbaC_t COLOR::interpolatedColorFromValue(double value, const colorInterp
     rgbaC_t finalColor;
 
     //Then we deal with the cases where the value is outside the extremes:
-    if(value < correspondences_ptr->at(0).value) { finalColor = correspondences_ptr->at(0).color; }
-    else if(value > correspondences_ptr->back().value) { finalColor = correspondences_ptr->back().color; }
+    if(value <= correspondences_ptr->at(0).value) { finalColor = correspondences_ptr->at(0).color; }
+    else if(value >= correspondences_ptr->back().value) { finalColor = correspondences_ptr->back().color; }
     //Or interpolate between the values we got before in case it's within the extremes:
     else {
     
         double valueSpan = valueAfter - valueBefore;
+
         assert(valueSpan > 0);
 
         double t = (value - valueBefore)/valueSpan;
