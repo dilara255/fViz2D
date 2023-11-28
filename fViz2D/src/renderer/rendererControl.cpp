@@ -87,6 +87,7 @@ bool shouldInterpolateColors(bool* shouldInterpolate_ptr, COLOR::colorInterpolat
 F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                             COLOR::rgbaF_t* clearColor_ptr,
                                             GUI::menuDefinition_t userMenuDef,
+                                            GUI::filenameCallback_func* filenameFunc,
                                             COLOR::colorInterpolation_t* scheme_ptr,
                                             std::string windowName, 
                                             int width, int height,
@@ -132,13 +133,16 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
     bool shouldInterpolate = mightInterpolateColors(scheme_ptr, kind);
     bool shouldSave = false;
     int steps = 0;
+    std::string filename;
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
         render(window, &dynamicTexture, userMenuDef, &bannerTexture, clearColor_ptr, 
                                   &shouldInterpolate, &keepRunning, io, &shouldSave);
 
         if (shouldSave) { 
-            IMG::saveImage(fieldToPassToTexture_ptr, std::to_string(steps), IMG::imageType::JPG); 
+            if(filenameFunc != nullptr) { filename = filenameFunc(steps); }
+            else(filename = std::to_string(steps));
+            IMG::saveImage(fieldToPassToTexture_ptr, filename, IMG::imageType::JPG); 
             shouldSave = false;
         }
 
@@ -166,13 +170,14 @@ void F_V2::rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_p
 		                                 F_V2::rendererRetCode_st* returnCode_ptr, 
 									     COLOR::rgbaF_t* clearColor_ptr,
 		                                 GUI::menuDefinition_t userMenuDef,
+                                         GUI::filenameCallback_func* filenameFunc,
                                          COLOR::colorInterpolation_t* scheme_ptr,
                                          std::string windowName, 
                                          int width, int height,
                                          const char* bannerPathFromBinary) {
 
     *returnCode_ptr = 
-        F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, scheme_ptr, windowName, 
+        F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, filenameFunc, scheme_ptr, windowName, 
                                                             width, height, bannerPathFromBinary);
     return;
 }
@@ -183,13 +188,14 @@ void mockSave() { puts("SAVED!"); }
 		                                                 F_V2::rendererRetCode_st* returnCode_ptr, 
 									                     COLOR::rgbaF_t* clearColor_ptr,
 		                                                 GUI::menuDefinition_t userMenuDef,
+                                                         GUI::filenameCallback_func* filenameFunc,
                                                          COLOR::colorInterpolation_t* scheme_ptr,
                                                          std::string windowName, 
                                                          int width, int height,
                                                          const char* bannerPathFromBinary) {
 
     return std::thread(F_V2::rendererMainForSeparateThread, dynamicData_ptr, returnCode_ptr, 
-                                                            clearColor_ptr, userMenuDef, 
+                                                            clearColor_ptr, userMenuDef, filenameFunc,
                                                             scheme_ptr, windowName, width, height,
                                                             bannerPathFromBinary);
 }
@@ -197,11 +203,12 @@ void mockSave() { puts("SAVED!"); }
 F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                                          COLOR::rgbaF_t* clearColor_ptr,
 		                                                 GUI::menuDefinition_t userMenuDef,
+                                                         GUI::filenameCallback_func* filenameFunc,
                                                          COLOR::colorInterpolation_t* scheme_ptr,
                                                          std::string windowName, 
                                                          int width, int height,
                                                          const char* bannerPathFromBinary){
 
-    return F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, scheme_ptr, 
+    return F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, filenameFunc, scheme_ptr, 
                               windowName, width, height, bannerPathFromBinary);
 }

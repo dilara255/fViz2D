@@ -21,6 +21,10 @@ namespace F_V2 {
 
 	//TODO: CRITICAL: As soon as rendering is made more general, review the next two tests
 
+	std::string filenameFunc(int steps) {
+		return "TEST3_" + std::to_string(steps);
+	}
+
 	bool rendererTestFromImage() {
 
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a dynamic image\n"); GETCHAR_PAUSE;
@@ -102,6 +106,11 @@ namespace F_V2 {
 		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK) && savedFine;
 	}
 
+
+
+
+
+
 	#define TEST_WIDTH 512
 	#define TEST_HEIGHT 512
 	bool rendererTestFromDoubles2Dfield() {
@@ -131,7 +140,7 @@ namespace F_V2 {
 			                                                        &clearColor.r, &noiseTint.r);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
-			                                                &clearColor, testMenu, &scheme,
+			                                                &clearColor, testMenu, nullptr, &scheme,
 															std::string("Visual Test without Color Interpolation"),
 			                                                1024, 768);
 			
@@ -218,6 +227,12 @@ namespace F_V2 {
 		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
 	}
 
+
+
+
+
+
+
 	bool rendererTestFromDoubles2DfieldWithColorInterp() {
 
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles and show it with a color scheme\n"); GETCHAR_PAUSE;
@@ -246,7 +261,7 @@ namespace F_V2 {
 			                                                        &clearColor.r, &noiseTint.r);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
-			                                                &clearColor, testMenu, &scheme,
+			                                                &clearColor, testMenu, filenameFunc, &scheme,
 															std::string("Visual Test without Color Interpolation"));
 
 		//TODO: prngg.hpp and then this : )

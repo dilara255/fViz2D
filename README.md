@@ -2,11 +2,13 @@
 **Simple 2D data renderer using Dear imGui with docking and GLFW3, for Windows and Linux.**
 
 WIP: the goal is to be able to receive data and texture quads with it in real-time, with an interface to arrange, show/hide, scale, rotate and flip the layers, etc, as well as a simplified API to add hooks to develop applications capable of controlling whatever is creating said data. Should also have support to serialize, save and load its state.
+
 Current state: 
 - Renders a single data field (with support for different kinds of fields). 
 - Can translate scalars to simple color schemes (for now, on the CPU - shader support will come later).
-- Has a few, fixed hooks.
-- Coming next: simple image saving and more versatile hooks.
+- Simple image saving (via GUI and as an utility function).
+- Custumizable GUI hooks. *VERY HACKY*, but works. To be made prettier in the future.
+- All in all, a minimal viable version of the system.
 
 ## Requirements:
 
