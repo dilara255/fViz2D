@@ -13,4 +13,6 @@ namespace GUI {
         guiMenu_func* menuFunc_ptr = nullptr;
         std::string menuName = "Client Menu";
     } menuDefinition_t;
+
+    typedef std::string filenameCallback_func(int steps);
 }
