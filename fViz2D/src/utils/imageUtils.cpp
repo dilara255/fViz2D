@@ -5,7 +5,8 @@
 #include <algorithm>
 
 F_V2::imageFileRetCode_st IMG::saveImage(const generic2DfieldPtr_t* image_ptr, std::string filename, 
-		                                            imageType_t type, int quality, std::string path) {
+		                                            imageType_t type, int quality, std::string path,
+		                                                                    double min, double span) {
 
 	kinds2Ddata kind = image_ptr->getKindOfField();
 	if(kind == kinds2Ddata::UNINITIALIZED_UNION) { return F_V2::imageFileRetCode_st::BAD_DATA_TO_SAVE; }
@@ -18,18 +19,42 @@ F_V2::imageFileRetCode_st IMG::saveImage(const generic2DfieldPtr_t* image_ptr, s
 	std::string fullPath = path + filename;
 	int internalReturn;
 
+    //JPG AND PNG EXPECT 8BPC, so:
+    IMG::grey8bpcImage_t tempGReyImage;
+    const void* dataPtrToUse = image_ptr->getVoidData_ptr();
+    auto sizePtrToUse =  sizeInfo_ptr;
+
+    if (sizeInfo_ptr->bytesPerChannel != 1) {
+        switch (kind) {
+
+            case kinds2Ddata::FLOATS_FIELD: 
+                tempGReyImage = 
+                    IMG::copy2DfieldToNewGreyscaleImage(image_ptr->getConstFieldPtr().floatsField_ptr, min, span);
+                    dataPtrToUse = tempGReyImage.data.get();
+                    sizePtrToUse = &tempGReyImage.size;
+            break;
+            case kinds2Ddata::DOUBLES_FIELD:
+                tempGReyImage = 
+                    IMG::copy2DfieldToNewGreyscaleImage(image_ptr->getConstFieldPtr().doublesField_ptr, min, span);
+                    dataPtrToUse = tempGReyImage.data.get();
+                    sizePtrToUse = &tempGReyImage.size;
+            break;
+            default: 
+                return F_V2::imageFileRetCode_st::BAD_DATA_TO_SAVE;
+        }
+    }
+
 	switch (type) {
-		case(imageType_t::JPG):
+		case imageType_t::JPG:
             fullPath += ".jpg";
 			internalReturn = 
-				stbi_write_jpg(fullPath.c_str(), w, h, comp, image_ptr->getVoidData_ptr(), quality);
-			break;
-		case(imageType_t::PNG):
+				stbi_write_jpg(fullPath.c_str(), w, h, comp, dataPtrToUse, quality);
+		break;
+		case imageType_t::PNG:
             fullPath += ".png";
 			internalReturn = 
-				stbi_write_png(fullPath.c_str(), w, h, comp, image_ptr->getVoidData_ptr(), 
-						                            (int)sizeInfo_ptr->getStrideInBytes());
-			break;
+				stbi_write_png(fullPath.c_str(), w, h, comp, dataPtrToUse, (int)sizePtrToUse->getStrideInBytes());
+		break;
 	}
 		
 	if(internalReturn) { return F_V2::imageFileRetCode_st::OK; }
@@ -58,9 +83,16 @@ F_V2::imageFileRetCode_st IMG::saveImage(const generic2DfieldPtr_t* image_ptr, s
     return data_ptr;
 }
 
-//In case alocation fails, the field's "initialized" member will be false and width/height will be zero
 [[nodiscard]] IMG::rgbaImage_t IMG::createEmpty4channel8bpcImage(size_t width, size_t height) {
     IMG::rgbaImage_t newField;
+
+    newField.data = std::unique_ptr<unsigned char>((unsigned char*)createBufferFor2Dfield(width, height, &newField.size));
+    
+    return newField;
+}
+
+[[nodiscard]] IMG::grey8bpcImage_t IMG::createEmpty1channel8bpcImage(size_t width, size_t height) {
+    IMG::grey8bpcImage_t newField;
 
     newField.data = std::unique_ptr<unsigned char>((unsigned char*)createBufferFor2Dfield(width, height, &newField.size));
     
@@ -117,6 +149,60 @@ F_V2::texRetCode_st IMG::copy2Dfield(const IMG::doubles2Dfield_t* origin_ptr,
     return F_V2::texRetCode_st::OK;
 }
 
+IMG::grey8bpcImage_t IMG::copy2DfieldToNewGreyscaleImage(const floats2Dfield_t* floatOrigin_ptr, 
+                                                                        double min, double span) {
+    IMG::grey8bpcImage_t image;
+    
+    if(!floatOrigin_ptr->size.initialized || (span <= 0) ) { return image; }
+
+    auto originSize = floatOrigin_ptr->size;
+    size_t lastIndexOrigin = originSize.getMaxIndex();
+
+    image = createEmpty1channel8bpcImage(originSize.width, originSize.height);
+    auto dest_ptr = image.data.get();
+
+    float value;
+    for (size_t i = 0; i < lastIndexOrigin; i++) {
+        value = floatOrigin_ptr->data.get()[i];
+        //map [min, min + span] to [0, 1]:
+        value -= min;
+        value /= span;
+        //and clamp:
+        value = std::clamp(value, 0.0f, 1.0f);
+
+        dest_ptr[i] = (unsigned char)255*value;
+    }
+
+    return image;
+}
+
+IMG::grey8bpcImage_t IMG::copy2DfieldToNewGreyscaleImage(const doubles2Dfield_t* doubleOrigin_ptr, 
+                                                                         double min, double span) {
+    IMG::grey8bpcImage_t image;
+    
+    if(!doubleOrigin_ptr->size.initialized || (span <= 0) ) { return image; }
+
+    auto originSize = doubleOrigin_ptr->size;
+    size_t lastIndexOrigin = originSize.getMaxIndex();
+
+    image = createEmpty1channel8bpcImage(originSize.width, originSize.height);
+    auto dest_ptr = image.data.get();
+
+    double value;
+    for (size_t i = 0; i < lastIndexOrigin; i++) {
+        value = doubleOrigin_ptr->data.get()[i];
+        //map [min, min + span] to [0, 1]:
+        value -= min;
+        value /= span;
+        //and clamp:
+        value = std::clamp(value, 0.0, 1.0);
+
+        dest_ptr[i] = (unsigned char)255*value;
+    }
+
+    return image;
+}
+
 F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const generic2DfieldPtr_t* valuesField_ptr, 
 									                        rgbaImage_t* imageField_ptr, 
 															const COLOR::colorInterpolation_t* scheme_ptr) {
@@ -124,16 +210,15 @@ F_V2::texRetCode_st IMG::translateValuesToInterpolatedColors(const generic2Dfiel
     IMG::kinds2Ddata kind = valuesField_ptr->getKindOfField();
 
     switch (kind) {
-        case IMG::kinds2Ddata::UNINITIALIZED_UNION:
-            return F_V2::texRetCode_st::BAD_VALUE_FIELD;
-        case IMG::kinds2Ddata::RGBA_IMAGE:
-            return F_V2::texRetCode_st::OK;
+        
         case IMG::kinds2Ddata::FLOATS_FIELD:
             return translateValuesToInterpolatedColors(valuesField_ptr->getConstFieldPtr().floatsField_ptr,
                                                                                 imageField_ptr, scheme_ptr);
         case IMG::kinds2Ddata::DOUBLES_FIELD:
             return translateValuesToInterpolatedColors(valuesField_ptr->getConstFieldPtr().doublesField_ptr,
                                                                                  imageField_ptr, scheme_ptr);
+        default:
+            return F_V2::texRetCode_st::BAD_VALUE_FIELD;
     }
 }
 
