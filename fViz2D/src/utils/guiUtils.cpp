@@ -19,9 +19,8 @@ void GUI::imGuiDrawTexture(TEX::textureID_t* texID_ptr, const char* windowName) 
 }
 
 void GUI::imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, float* noiseTintColorFirstElement_ptr,
-                               bool* keepRendering_ptr, bool* testBool_ptr, bool* shouldInterpolateColors_ptr) {
-    //static float f = 0.0f;
-    //static int counter = 0;
+                               bool* keepRendering_ptr, bool* testBool_ptr, bool* shouldInterpolateColors_ptr,
+               		                                                                     bool* shouldSave_ptr) {
 
     ImGui::Begin("Test Menu");                          
 
@@ -30,6 +29,8 @@ void GUI::imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, float* n
     ImGui::Checkbox("Is this working?", testBool_ptr);
     ImGui::SameLine();
     ImGui::Checkbox("Interpolate colors?", shouldInterpolateColors_ptr);
+    ImGui::SameLine();
+    if(ImGui::Button("Save image")) { *shouldSave_ptr = true; }
                
     ImGui::ColorEdit4("clear color", clearColorFirstElement_ptr); 
     ImGui::ColorEdit4("noise tint", noiseTintColorFirstElement_ptr); 

@@ -9,7 +9,7 @@ namespace F_V2 {
 	//Supported formats are the same as those supported by the texture loading functions in renderData.hpp
 	F_V2::rendererRetCode_st rendererMain(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
 		             IMG::generic2DfieldPtr_t* dynamicData_ptr, 
-		             COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr, 
+		             COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr,
 		             COLOR::colorInterpolation_t* scheme_ptr,
 		             std::string windowName, int width, int height, const char* bannerPathFromBinary);
 
@@ -22,4 +22,6 @@ namespace F_V2 {
 		                               COLOR::colorInterpolation_t* scheme_ptr,
 		                               std::string windowName, int width, int height, 
 		                               const char* bannerPathFromBinary);
+
+	void saveCurrentImage();
 }
