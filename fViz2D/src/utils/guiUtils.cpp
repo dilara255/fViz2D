@@ -18,27 +18,40 @@ void GUI::imGuiDrawTexture(TEX::textureID_t* texID_ptr, const char* windowName) 
     ImGui::PopStyleVar(2);
 }
 
-void GUI::imGuiTestMenu(ImGuiIO& io, float* clearColorFirstElement_ptr, float* noiseTintColorFirstElement_ptr,
-                               bool* keepRendering_ptr, bool* testBool_ptr, bool* shouldInterpolateColors_ptr,
-               		                                                                     bool* shouldSave_ptr) {
-
-    ImGui::Begin("Test Menu");                          
-
-    ImGui::Text("This is a test menu."); 
-    ImGui::SameLine();
-    ImGui::Checkbox("Is this working?", testBool_ptr);
-    ImGui::SameLine();
-    ImGui::Checkbox("Interpolate colors?", shouldInterpolateColors_ptr);
-    ImGui::SameLine();
-    if(ImGui::Button("Save image")) { *shouldSave_ptr = true; }
-               
-    ImGui::ColorEdit4("clear color", clearColorFirstElement_ptr); 
-    ImGui::ColorEdit4("noise tint", noiseTintColorFirstElement_ptr); 
-
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+void GUI::imGuiCreateMenu(menuDefinition_t menuDefinition) {
     
-    ImGui::SameLine();
-    *keepRendering_ptr = !ImGui::Button("Exit");
+    if(menuDefinition.menuName == "") { menuDefinition.menuName = "Menu"; }
+
+    ImGui::Begin(menuDefinition.menuName.c_str());             
+    
+    menuDefinition.menuFunc_ptr(menuDefinition.hooks);
 
     ImGui::End();
+}
+
+void testMenu(GUI::hookList_t menuElements);
+GUI::menuDefinition_t GUI::getTestMenuDefinition(bool* testBool_ptr, float* clearColorFirstElement_ptr, 
+                                                 float* noiseTintColorFirstElement_ptr) {
+
+    GUI::menuDefinition_t definition;
+    definition.menuFunc_ptr = testMenu;
+
+    definition.hooks.push_back((void*)testBool_ptr);
+    definition.hooks.push_back((void*)clearColorFirstElement_ptr);
+    definition.hooks.push_back((void*)noiseTintColorFirstElement_ptr);
+
+    definition.menuName = "Test Menu";
+
+    return definition;
+}
+void testMenu(GUI::hookList_t menuElements) { 
+    enum hookEnum { TEST_BOOL, CLEAR_COLOR, NOISE_TINT, TOTAL };
+    if(menuElements.size() != TOTAL ) { return; }
+   
+    ImGui::Text("This is a test menu."); 
+    ImGui::SameLine();
+    ImGui::Checkbox("Is this working?", (bool*)menuElements.at(TEST_BOOL));
+               
+    ImGui::ColorEdit4("clear color", (float*)menuElements.at(CLEAR_COLOR)); 
+    ImGui::ColorEdit4("noise tint", (float*)menuElements.at(NOISE_TINT));
 }
