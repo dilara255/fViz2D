@@ -25,12 +25,12 @@ static void tmpGlfwErrorCallback(int error, const char* description)
 void render(GLFWwindow* window, ImGuiIO& io, COLOR::rgbaF_t* clearColor_ptr, 
             TEX::textureID_t* bannerTexture_ptr, TEX::textureID_t* dynamicTexture_ptr, 
             COLOR::rgbaF_t* noiseTint_ptr, bool* keepRendering_ptr, bool* testBool_ptr,
-            bool* shouldInterpolateColors_ptr) {
+            bool* shouldInterpolateColors_ptr, bool* shouldSave_ptr) {
 
     GUI::imGuiNewFrame();
     GUI::createTransparentDockNodeOverMainViewport();      
     GUI::imGuiTestMenu(io, &(clearColor_ptr->r), &(noiseTint_ptr->r), keepRendering_ptr, 
-                                              testBool_ptr, shouldInterpolateColors_ptr);
+                                testBool_ptr, shouldInterpolateColors_ptr, shouldSave_ptr);
     GUI::imGuiDrawTexture(bannerTexture_ptr);
     GUI::imGuiDrawTexture(dynamicTexture_ptr, "Dynamic Data");
     GUI::render();
@@ -53,6 +53,7 @@ bool shouldInterpolateColors(bool* shouldInterpolate_ptr, COLOR::colorInterpolat
     return *shouldInterpolate_ptr && mightInterpolateColors(scheme_ptr, kind);
 }
 
+//TODO-ARQ: some of the stuff used here could be pulled into and kept by a renderer class
 F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
                                             IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                             COLOR::rgbaF_t* clearColor_ptr, COLOR::rgbaF_t* noiseTint_ptr,
@@ -98,11 +99,18 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, bool* should
     F_V2::texRetCode_st colorInterpReturn = F_V2::texRetCode_st::OK;
 
     //RUN:
+    bool shouldSave = false;
+    int steps = 0;
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
         render(window, io, clearColor_ptr, &bannerTexture, &dynamicTexture, noiseTint_ptr, 
-                                    &keepRunning, externalBool_ptr, shouldInterpolate_ptr);
+                      &keepRunning, externalBool_ptr, shouldInterpolate_ptr, &shouldSave);
         
+        if (shouldSave) { 
+            IMG::saveImage(fieldToPassToTexture_ptr, std::to_string(steps), IMG::imageType::JPG); 
+            shouldSave = false;
+        }
+
         //TODO: not really checking return of these
         if(shouldInterpolateColors(shouldInterpolate_ptr, scheme_ptr, kind)) {
             fieldToPassToTexture_ptr = &colorInterpolationField;
@@ -112,6 +120,8 @@ F_V2::rendererRetCode_st F_V2::rendererMain(bool* externalBool_ptr, bool* should
         else { fieldToPassToTexture_ptr = dynamicData_ptr; }
 
         TEX::loadTextureFromGeneric2DfieldPtr(fieldToPassToTexture_ptr, &dynamicTexture);
+
+        steps++;
     }
 
     //END:
@@ -135,6 +145,8 @@ void F_V2::rendererMainForSeparateThread(bool* externalBool_ptr, bool* shouldInt
                                                        scheme_ptr, windowName, width, height, bannerPathFromBinary);
     return;
 }
+
+void mockSave() { puts("SAVED!"); }
 
 [[nodiscard]] std::thread F_V2::spawnRendererOnNewThread(bool* externalBool_ptr, bool* shouldInterpolate_ptr,
                                                          IMG::generic2DfieldPtr_t* dynamicData_ptr, 

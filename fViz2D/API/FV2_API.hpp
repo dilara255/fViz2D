@@ -31,4 +31,6 @@ namespace F_V2 {
 											  std::string windowName = "fViz2D Window",                           
 											  int width = 800, int height = 600, 
 		                                      const char* bannerPathFromBinary  = F_V2::testBannerPathFromBinary);
+
+	//TODO: add function to tell renderer to save current image
 }
