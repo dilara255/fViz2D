@@ -1,5 +1,6 @@
 #include "FV2_API.hpp"
 #include "FV2_testsAPI.hpp"
+#include "GUI_API.hpp"
 
 #include "renderer/rendererControl.hpp"
 #include "resourcePaths.hpp"
@@ -25,7 +26,6 @@ namespace F_V2 {
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a dynamic image\n"); GETCHAR_PAUSE;
 
 		bool passedVisualInspection = false;
-		bool shouldInterpolateColors = false;
 
 		IMG::rgbaImage_t dynamicTestData = 
 			IMG::load4channel8bpcImageFromFile(F_V2::noiseColor512by512pathFromBinary);
@@ -39,10 +39,11 @@ namespace F_V2 {
 		IMG::generic2DfieldPtr_t tintedDynamicTestDataPtr;
 		tintedDynamicTestDataPtr.storeRGBAfield(&tintedDynamicTestData);
 
-		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
-														   &shouldInterpolateColors, &tintedDynamicTestDataPtr, 
-														   &clearColor, &noiseTint, &returnCode);	
-		
+		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
+			                                                        &clearColor.r, &noiseTint.r);
+
+		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&tintedDynamicTestDataPtr, &returnCode,
+			                                                            &clearColor, testMenu);	
 			
 		//Change the dynamic image while the rendering isn't done:
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
@@ -108,7 +109,6 @@ namespace F_V2 {
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles\n"); GETCHAR_PAUSE;
 
 		bool passedVisualInspection = false;
-		bool shouldInterpolateColors = false;
 
 		IMG::doubles2Dfield_st noiseInternal = IMG::createDoubles2Dfield(TEST_WIDTH, TEST_HEIGHT);
 		IMG::floats2Dfield_st noiseIntermediate = IMG::createFloats2Dfield(TEST_WIDTH, TEST_HEIGHT);
@@ -127,12 +127,13 @@ namespace F_V2 {
 		noiseDataPtr.storeFloatsField(&noiseToRender);
 		COLOR::colorInterpolation_t scheme;
 
-		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
-			                                 &shouldInterpolateColors,
-			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
-			                                 &scheme,
-									         std::string("Visual Test without Color Interpolation"),
-			                                 1024, 768);
+		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
+			                                                        &clearColor.r, &noiseTint.r);
+
+		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
+			                                                &clearColor, testMenu, &scheme,
+															std::string("Visual Test without Color Interpolation"),
+			                                                1024, 768);
 			
 		//TODO: prngg.hpp and then this : )
 		std::vector<double> drawnPRNs;
@@ -222,7 +223,6 @@ namespace F_V2 {
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles and show it with a color scheme\n"); GETCHAR_PAUSE;
 
 		bool passedVisualInspection = false;
-		bool shouldInterpolateColors = true;
 
 		IMG::doubles2Dfield_st noiseInternal = IMG::createDoubles2Dfield(TEST_WIDTH, TEST_HEIGHT);
 		IMG::floats2Dfield_st noiseToRender = IMG::createFloats2Dfield(TEST_WIDTH, TEST_HEIGHT);
@@ -241,13 +241,14 @@ namespace F_V2 {
 		COLOR::colorInterpolation_t scheme;
 		scheme.loadScheme(&COLOR::defaultBlueYellowRedScheme);
 		scheme.normalizeSpan();
-
-		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&passedVisualInspection, 
-			                                 &shouldInterpolateColors,
-			                                 &noiseDataPtr, &clearColor, &noiseTint, &returnCode,
-			                                 &scheme,
-			                                 std::string("Visual Test with Color Interpolation"));
 			
+		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
+			                                                        &clearColor.r, &noiseTint.r);
+
+		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
+			                                                &clearColor, testMenu, &scheme,
+															std::string("Visual Test without Color Interpolation"));
+
 		//TODO: prngg.hpp and then this : )
 		std::vector<double> drawnPRNs;
 		size_t elements = noiseInternal.size.getTotalElements();
