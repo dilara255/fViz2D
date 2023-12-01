@@ -142,7 +142,7 @@ namespace F_V2 {
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
 			                                                &clearColor, testMenu, nullptr, &scheme,
 															std::string("Visual Test without Color Interpolation"),
-			                                                1024, 768);
+			                                                1024, 768, false);
 			
 		//TODO: prngg.hpp and then this : )
 		std::vector<double> drawnPRNs;

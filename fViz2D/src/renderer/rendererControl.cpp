@@ -41,17 +41,16 @@ void rendererMenu(GUI::hookList_t hooks, F_V2::rendererControlPtrs_t* rendererCo
 
 void render(GLFWwindow* window, TEX::textureID_t* dynamicTexture_ptr, GUI::menuDefinition_t userDef,
             TEX::textureID_t* bannerTexture_ptr, COLOR::rgbaF_t* clearColor_ptr, 
-            F_V2::rendererControlPtrs_t* rendererControl_ptr) {
+            F_V2::rendererControlPtrs_t* rendererControl_ptr, bool createDefaultRendererMenu) {
 
     GUI::menuDefinition_t rendererMenuDef;
     rendererMenuDef.menuFunc_ptr = rendererMenu;
- 
     rendererMenuDef.menuName = "Renderer Menu";
 
     GUI::imGuiNewFrame();
     GUI::createTransparentDockNodeOverMainViewport();      
     if(userDef.menuFunc_ptr != nullptr) { GUI::imGuiCreateMenu(userDef); }
-    GUI::imGuiCreateMenu(rendererMenuDef, rendererControl_ptr);
+    if(createDefaultRendererMenu) { GUI::imGuiCreateMenu(rendererMenuDef, rendererControl_ptr); }
     GUI::imGuiDrawTexture(bannerTexture_ptr);
     GUI::imGuiDrawTexture(dynamicTexture_ptr, "Dynamic Data");
     GUI::render();
@@ -86,6 +85,7 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
                                             COLOR::colorInterpolation_t* scheme_ptr,
                                             std::string windowName, 
                                             int width, int height,
+                                            bool createDefaultRendererMenu,
                                             const char* bannerPathFromBinary) {
 
     //INIT:
@@ -138,7 +138,7 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
         render(window, &dynamicTexture, userMenuDef, &bannerTexture, clearColor_ptr, 
-                                                                   &rendererControl);
+                                        &rendererControl, createDefaultRendererMenu);
 
         if (shouldSave) { 
             if(filenameFunc != nullptr) { filename = filenameFunc(steps); }
@@ -175,11 +175,12 @@ void F_V2::rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_p
                                          COLOR::colorInterpolation_t* scheme_ptr,
                                          std::string windowName, 
                                          int width, int height,
+                                         bool createDefaultRendererMenu,
                                          const char* bannerPathFromBinary) {
 
     *returnCode_ptr = 
         F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, filenameFunc, scheme_ptr, windowName, 
-                                                            width, height, bannerPathFromBinary);
+                                                            width, height, createDefaultRendererMenu, bannerPathFromBinary);
     return;
 }
 
@@ -191,11 +192,13 @@ void F_V2::rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_p
                                                          COLOR::colorInterpolation_t* scheme_ptr,
                                                          std::string windowName, 
                                                          int width, int height,
+                                                         bool createDefaultRendererMenu,
                                                          const char* bannerPathFromBinary) {
 
     return std::thread(F_V2::rendererMainForSeparateThread, dynamicData_ptr, returnCode_ptr, 
                                                             clearColor_ptr, userMenuDef, filenameFunc,
                                                             scheme_ptr, windowName, width, height,
+                                                            createDefaultRendererMenu,
                                                             bannerPathFromBinary);
 }
 
@@ -206,8 +209,9 @@ F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(IMG::generic2DfieldPtr_
                                                          COLOR::colorInterpolation_t* scheme_ptr,
                                                          std::string windowName, 
                                                          int width, int height,
+                                                         bool createDefaultRendererMenu,
                                                          const char* bannerPathFromBinary){
 
     return F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, filenameFunc, scheme_ptr, 
-                              windowName, width, height, bannerPathFromBinary);
+                              windowName, width, height, createDefaultRendererMenu, bannerPathFromBinary);
 }

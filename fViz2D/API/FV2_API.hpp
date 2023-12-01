@@ -22,6 +22,7 @@ namespace F_V2 {
 												  COLOR::colorInterpolation_t* scheme_ptr = nullptr,
 												  std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
 												  int width = 800, int height = 600,
+											      bool createDefaultRendererMenu = true,
 												  const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
 	//dynamicData_ptr should hold either a rgbaImage_t or a floats2Dfield_t (see imageUtils.hpp)
@@ -34,6 +35,7 @@ namespace F_V2 {
 											      COLOR::colorInterpolation_t* scheme_ptr = nullptr,
 											      std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
 											      int width = 800, int height = 600,
+		                                          bool createDefaultRendererMenu = true,
 											      const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
 	//Used to expose some control over the renderer (eg, to create GUIs)
