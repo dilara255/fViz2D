@@ -3,6 +3,8 @@
 // =======> May fail depending on working directory
 // TODO: make it checked and etc;
 
+#include "timeHelpers.hpp"
+
 #include "layers/glfwOglLayer.hpp"
 #include "layers/imGuiLayer.hpp"
 
@@ -21,6 +23,10 @@
 static void tmpGlfwErrorCallback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+void F_V2::defaultSynchCallback() {
+    return;
 }
 
 void rendererMenu(GUI::hookList_t hooks, F_V2::rendererControlPtrs_t* rendererControl_ptr) {
@@ -86,6 +92,7 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
                                             std::string windowName, 
                                             int width, int height,
                                             bool createDefaultRendererMenu,
+                                            synchCallback_func synchCallback,
                                             const char* bannerPathFromBinary) {
 
     //INIT:
@@ -127,16 +134,16 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
     //Prepare the rendererControlPtrs_t structure:
     bool shouldInterpolate = mightInterpolateColors(scheme_ptr, kind);
     bool shouldSave = false;
-    bool canRenderNext = true;
     int steps = 0;
 
     rendererControlPtrs_t rendererControl;
-    rendererControl.loadPointers(&shouldInterpolate, &keepRunning, (void*)&io, &shouldSave, &canRenderNext, &steps);
+    rendererControl.loadPointers(&shouldInterpolate, &keepRunning, (void*)&io, &shouldSave, &steps);
 
     //RUN:
     std::string filename;
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
+
         render(window, &dynamicTexture, userMenuDef, &bannerTexture, clearColor_ptr, 
                                         &rendererControl, createDefaultRendererMenu);
 
@@ -158,6 +165,8 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
         TEX::loadTextureFromGeneric2DfieldPtr(fieldToPassToTexture_ptr, &dynamicTexture);
 
         steps++;
+
+        synchCallback();
     }
 
     //END:
@@ -176,11 +185,12 @@ void F_V2::rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_p
                                          std::string windowName, 
                                          int width, int height,
                                          bool createDefaultRendererMenu,
+                                         synchCallback_func synchCallback,
                                          const char* bannerPathFromBinary) {
 
     *returnCode_ptr = 
         F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, filenameFunc, scheme_ptr, windowName, 
-                                                            width, height, createDefaultRendererMenu, bannerPathFromBinary);
+                                width, height, createDefaultRendererMenu, synchCallback, bannerPathFromBinary);
     return;
 }
 
@@ -193,12 +203,13 @@ void F_V2::rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_p
                                                          std::string windowName, 
                                                          int width, int height,
                                                          bool createDefaultRendererMenu,
+                                                         synchCallback_func synchCallback,
                                                          const char* bannerPathFromBinary) {
 
     return std::thread(F_V2::rendererMainForSeparateThread, dynamicData_ptr, returnCode_ptr, 
                                                             clearColor_ptr, userMenuDef, filenameFunc,
                                                             scheme_ptr, windowName, width, height,
-                                                            createDefaultRendererMenu,
+                                                            createDefaultRendererMenu, synchCallback,
                                                             bannerPathFromBinary);
 }
 
@@ -210,8 +221,10 @@ F_V2::rendererRetCode_st F_V2::spawnRendererOnThisThread(IMG::generic2DfieldPtr_
                                                          std::string windowName, 
                                                          int width, int height,
                                                          bool createDefaultRendererMenu,
+                                                         synchCallback_func synchCallback,
                                                          const char* bannerPathFromBinary){
 
     return F_V2::rendererMain(dynamicData_ptr, clearColor_ptr, userMenuDef, filenameFunc, scheme_ptr, 
-                              windowName, width, height, createDefaultRendererMenu, bannerPathFromBinary);
+                              windowName, width, height, createDefaultRendererMenu, synchCallback, 
+                              bannerPathFromBinary);
 }

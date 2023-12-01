@@ -70,6 +70,7 @@ void GUI::imGuiNewFrame() {
 void GUI::imGuiDrawGUIandUpdateOsWindows(ImDrawData* drawData_ptr, ImGuiIO& io) {
 
     ImGui_ImplOpenGL3_RenderDrawData(drawData_ptr);
+    
 
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
