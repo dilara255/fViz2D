@@ -70,15 +70,26 @@ void GUI::imGuiNewFrame() {
 void GUI::imGuiDrawGUIandUpdateOsWindows(ImDrawData* drawData_ptr, ImGuiIO& io) {
 
     ImGui_ImplOpenGL3_RenderDrawData(drawData_ptr);
-    
 
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        GLFWwindow* backup_current_context = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backup_current_context);
-    }
+    //***************************************************************
+    //This block used to run inside a
+    //if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) { ... }
+    //
+    //That was seemingly leading to an imGui assertion tripping up:
+    //
+    // (g.FrameCount == 0 || g.Framecount == g.FrameCountPlatformEnded) && "Forgot to call 
+    // UpdatePlatformWindows() in main loop after EndFrame()? Check examples/aplications for reference.", 
+    // file ..\depend\imGui-docking\igui]imgui.cpp, line 9818
+    //
+    //So I took this block out of the if and that seemed to stop. Nothing seemed to break.
+    //
+    //TODO-CRITICAL: Understand what is actually going on and make sure it's OK to have this outside the conditional
+    
+    GLFWwindow* backup_current_context = glfwGetCurrentContext();
+    ImGui::UpdatePlatformWindows();
+    ImGui::RenderPlatformWindowsDefault();
+    glfwMakeContextCurrent(backup_current_context);
+    //***************************************************************
 
     return;
 }
