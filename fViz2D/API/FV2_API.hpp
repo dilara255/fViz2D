@@ -1,9 +1,11 @@
 #pragma once
 
 #include "core.hpp"
+#include "miscStdHeaders.h"
+
+#include "prototypes.hpp"
 
 #include "utils/imageUtils.hpp"
-#include "utils/guiUtils.hpp"
 #include "renderer/rendererData.hpp"
 
 #include "resourcePaths.hpp"
@@ -15,7 +17,7 @@ namespace F_V2 {
 	//TODO: ADD TEST
 	F_V2_API F_V2::rendererRetCode_st spawnRendererOnThisThread(IMG::generic2DfieldPtr_t* dynamicData_ptr,
 												  COLOR::rgbaF_t* clearColor_ptr,
-												  GUI::menuDefinition_t userMenuDef = {},
+												  GUI::menuDefinition_t userMenuDef,
 		                                          GUI::filenameCallback_func* filenameFunc = nullptr,
 												  COLOR::colorInterpolation_t* scheme_ptr = nullptr,
 												  std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
@@ -27,12 +29,35 @@ namespace F_V2 {
 	F_V2_API std::thread spawnRendererOnNewThread(IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 											      F_V2::rendererRetCode_st* returnCode_ptr, 
 											      COLOR::rgbaF_t* clearColor_ptr,
-											      GUI::menuDefinition_t userMenuDef = {},
+											      GUI::menuDefinition_t userMenuDef,
 		                                          GUI::filenameCallback_func* filenameFunc = nullptr,
 											      COLOR::colorInterpolation_t* scheme_ptr = nullptr,
 											      std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
 											      int width = 800, int height = 600,
 											      const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
+
+	//Used to expose some control over the renderer (eg, to create GUIs)
+	typedef struct rendererControlPtrs_st {
+		bool initialized = false;
+		bool* shouldInterpolateColors_ptr = nullptr; 
+		bool* keepRendering_ptr = nullptr; 
+		void* ImGuiIO_ptr = nullptr; 
+		bool* shouldSave_ptr = nullptr;
+		bool* canRenderNext_ptr = nullptr;
+		int* steps_ptr = nullptr;
+
+		void loadPointers(bool* p_shouldInterpolateColors_ptr, bool* p_keepRendering_ptr, void* p_ImGuiIO_ptr, 
+			              bool* p_shouldSave_ptr, bool* p_canRenderNext_ptr, int* p_steps_ptr) {
+
+			shouldInterpolateColors_ptr = p_shouldInterpolateColors_ptr;
+			keepRendering_ptr = p_keepRendering_ptr;
+			ImGuiIO_ptr = p_ImGuiIO_ptr;
+			shouldSave_ptr = p_shouldSave_ptr;
+			canRenderNext_ptr = p_canRenderNext_ptr;
+			steps_ptr = p_steps_ptr;
+			initialized = true;
+		}
+	} rendererControlPtrs_t;
 
 	//TODO: add function to tell renderer to save current image
 }
