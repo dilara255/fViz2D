@@ -16,6 +16,7 @@ namespace F_V2 {
                                           COLOR::colorInterpolation_t* scheme_ptr = nullptr,
                                           std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
                                           int width = 800, int height = 600,
+		                                  bool createDefaultRendererMenu = true,
                                           const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
 	//Sets returnCode_ptr to BAD_DYNAMIC_DATA_FORMAT if dynamicData_ptr's format is not supported, otherwise to OK
@@ -28,6 +29,7 @@ namespace F_V2 {
                                        COLOR::colorInterpolation_t* scheme_ptr = nullptr,
                                        std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
                                        int width = 800, int height = 600,
+		                               bool createDefaultRendererMenu = true,
                                        const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
 	//TODO: implement after rendered is pulled into a class (and maybe expose this in the api instead?)
