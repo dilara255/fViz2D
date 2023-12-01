@@ -12,6 +12,8 @@
 
 namespace F_V2 {
 
+	typedef void synchCallback_func();
+
 	//dynamicData_ptr should hold either a rgbaImage_t or a floats2Dfield_t (see imageUtils.hpp)
 	//In case of a bad dynamicData_ptr type, returns BAD_DYNAMIC_DATA_FORMAT, otherwise returns OK
 	//TODO: ADD TEST
@@ -23,6 +25,7 @@ namespace F_V2 {
 												  std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
 												  int width = 800, int height = 600,
 											      bool createDefaultRendererMenu = true,
+		                                          synchCallback_func synchCallback = defaultSynchCallback,
 												  const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
 	//dynamicData_ptr should hold either a rgbaImage_t or a floats2Dfield_t (see imageUtils.hpp)
@@ -36,6 +39,7 @@ namespace F_V2 {
 											      std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
 											      int width = 800, int height = 600,
 		                                          bool createDefaultRendererMenu = true,
+		                                          synchCallback_func synchCallback = defaultSynchCallback,
 											      const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
 	//Used to expose some control over the renderer (eg, to create GUIs)
@@ -45,17 +49,15 @@ namespace F_V2 {
 		bool* keepRendering_ptr = nullptr; 
 		void* ImGuiIO_ptr = nullptr; 
 		bool* shouldSave_ptr = nullptr;
-		bool* canRenderNext_ptr = nullptr;
 		int* steps_ptr = nullptr;
 
 		void loadPointers(bool* p_shouldInterpolateColors_ptr, bool* p_keepRendering_ptr, void* p_ImGuiIO_ptr, 
-			              bool* p_shouldSave_ptr, bool* p_canRenderNext_ptr, int* p_steps_ptr) {
+			              bool* p_shouldSave_ptr, int* p_steps_ptr) {
 
 			shouldInterpolateColors_ptr = p_shouldInterpolateColors_ptr;
 			keepRendering_ptr = p_keepRendering_ptr;
 			ImGuiIO_ptr = p_ImGuiIO_ptr;
 			shouldSave_ptr = p_shouldSave_ptr;
-			canRenderNext_ptr = p_canRenderNext_ptr;
 			steps_ptr = p_steps_ptr;
 			initialized = true;
 		}
