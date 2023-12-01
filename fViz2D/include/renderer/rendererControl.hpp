@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GUI_API.hpp"
+#include "FV2_API.hpp"
 #include "returnCodes.hpp"
 
 #include "utils/imageUtils.hpp" //TODO: I don't want this to include any non-api header (I think?)
@@ -30,5 +30,6 @@ namespace F_V2 {
                                        int width = 800, int height = 600,
                                        const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
 
+	//TODO: implement after rendered is pulled into a class (and maybe expose this in the api instead?)
 	void saveCurrentImage();
 }

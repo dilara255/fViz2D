@@ -1,6 +1,6 @@
 #include "FV2_API.hpp"
-#include "FV2_testsAPI.hpp"
 #include "GUI_API.hpp"
+#include "FV2_testsAPI.hpp"
 
 #include "renderer/rendererControl.hpp"
 #include "resourcePaths.hpp"

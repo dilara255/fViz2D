@@ -7,6 +7,7 @@
 #include "layers/imGuiLayer.hpp"
 
 #include "FV2_API.hpp"
+#include "GUI_API.hpp"
 
 #include "renderer/rendererControl.hpp"
 #include "renderer/rendererData.hpp"
@@ -22,48 +23,42 @@ static void tmpGlfwErrorCallback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-            
-void rendererMenu(GUI::hookList_t menuElements) {
+void rendererMenu(GUI::hookList_t hooks, F_V2::rendererControlPtrs_t* rendererControl_ptr) {
 
-    enum hookEnum { KEEP_RUNNING, SAVE, INTERPOLATE, IO, TOTAL };
-    if(menuElements.size() != TOTAL ) { return; }
-    
-    *(bool*)menuElements.at(KEEP_RUNNING) = !ImGui::Button("Exit");
+    auto io_ptr = (const ImGuiIO*)rendererControl_ptr->ImGuiIO_ptr;
 
-    auto io_ptr = (const ImGuiIO*)menuElements.at(IO);
+    *rendererControl_ptr->keepRendering_ptr = !ImGui::Button("Exit");
+
     ImGui::SameLine();
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io_ptr->Framerate, io_ptr->Framerate);    
 
     ImGui::SameLine();
-    if(ImGui::Button("Save image")) { *(bool*)menuElements.at(SAVE) = true; }
+    if(ImGui::Button("Save image")) { *rendererControl_ptr->shouldSave_ptr = true; }
 
     ImGui::SameLine();
-    ImGui::Checkbox("Interpolate colors?", (bool*)menuElements.at(INTERPOLATE));    
+    ImGui::Checkbox("Interpolate colors?", rendererControl_ptr->shouldInterpolateColors_ptr);    
 }            
 
 void render(GLFWwindow* window, TEX::textureID_t* dynamicTexture_ptr, GUI::menuDefinition_t userDef,
             TEX::textureID_t* bannerTexture_ptr, COLOR::rgbaF_t* clearColor_ptr, 
-            bool* shouldInterpolateColors_ptr, bool* keepRendering_ptr, ImGuiIO& io, bool* shouldSave_ptr ) {
+            F_V2::rendererControlPtrs_t* rendererControl_ptr) {
 
     GUI::menuDefinition_t rendererMenuDef;
     rendererMenuDef.menuFunc_ptr = rendererMenu;
-    rendererMenuDef.hooks.push_back(keepRendering_ptr);
-    rendererMenuDef.hooks.push_back(shouldSave_ptr);
-    rendererMenuDef.hooks.push_back(shouldInterpolateColors_ptr);
-    rendererMenuDef.hooks.push_back((void*)&io);    
+ 
     rendererMenuDef.menuName = "Renderer Menu";
 
     GUI::imGuiNewFrame();
     GUI::createTransparentDockNodeOverMainViewport();      
     if(userDef.menuFunc_ptr != nullptr) { GUI::imGuiCreateMenu(userDef); }
-    GUI::imGuiCreateMenu(rendererMenuDef);
+    GUI::imGuiCreateMenu(rendererMenuDef, rendererControl_ptr);
     GUI::imGuiDrawTexture(bannerTexture_ptr);
     GUI::imGuiDrawTexture(dynamicTexture_ptr, "Dynamic Data");
     GUI::render();
 
     clearFrameBuffer(window, *clearColor_ptr);
 
-    GUI::imGuiDrawGUIandUpdateOsWindows(ImGui::GetDrawData(), (ImGuiIO&)io);
+    GUI::imGuiDrawGUIandUpdateOsWindows(ImGui::GetDrawData(), (ImGuiIO&)rendererControl_ptr->ImGuiIO_ptr);
 
     glfwSwapBuffers(window);
 }
@@ -129,15 +124,21 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
     
     F_V2::texRetCode_st colorInterpReturn = F_V2::texRetCode_st::OK;
 
-    //RUN:
+    //Prepare the rendererControlPtrs_t structure:
     bool shouldInterpolate = mightInterpolateColors(scheme_ptr, kind);
     bool shouldSave = false;
+    bool canRenderNext = true;
     int steps = 0;
+
+    rendererControlPtrs_t rendererControl;
+    rendererControl.loadPointers(&shouldInterpolate, &keepRunning, (void*)&io, &shouldSave, &canRenderNext, &steps);
+
+    //RUN:
     std::string filename;
     while (!glfwWindowShouldClose(window) && keepRunning) {
         glfwPollEvents(); //for app: check io.WantCaptureMouse and io.WantCaptureKeyboard
         render(window, &dynamicTexture, userMenuDef, &bannerTexture, clearColor_ptr, 
-                                  &shouldInterpolate, &keepRunning, io, &shouldSave);
+                                                                   &rendererControl);
 
         if (shouldSave) { 
             if(filenameFunc != nullptr) { filename = filenameFunc(steps); }
@@ -181,8 +182,6 @@ void F_V2::rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_p
                                                             width, height, bannerPathFromBinary);
     return;
 }
-
-void mockSave() { puts("SAVED!"); }
 
 [[nodiscard]] std::thread F_V2::spawnRendererOnNewThread(IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 		                                                 F_V2::rendererRetCode_st* returnCode_ptr, 

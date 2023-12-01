@@ -1,3 +1,4 @@
+#include "GUI_API.hpp"
 #include "utils/guiUtils.hpp"
 
 void GUI::imGuiDrawTexture(TEX::textureID_t* texID_ptr, const char* windowName) {
@@ -18,18 +19,18 @@ void GUI::imGuiDrawTexture(TEX::textureID_t* texID_ptr, const char* windowName) 
     ImGui::PopStyleVar(2);
 }
 
-void GUI::imGuiCreateMenu(menuDefinition_t menuDefinition) {
+void GUI::imGuiCreateMenu(menuDefinition_t menuDefinition, F_V2::rendererControlPtrs_t* rendererControl_ptr) {
     
     if(menuDefinition.menuName == "") { menuDefinition.menuName = "Menu"; }
 
     ImGui::Begin(menuDefinition.menuName.c_str());             
     
-    menuDefinition.menuFunc_ptr(menuDefinition.hooks);
+    menuDefinition.menuFunc_ptr(menuDefinition.hooks, rendererControl_ptr);
 
     ImGui::End();
 }
 
-void testMenu(GUI::hookList_t menuElements);
+void testMenu(GUI::hookList_t menuElements, F_V2::rendererControlPtrs_t* rendererControl_ptr);
 GUI::menuDefinition_t GUI::getTestMenuDefinition(bool* testBool_ptr, float* clearColorFirstElement_ptr, 
                                                  float* noiseTintColorFirstElement_ptr) {
 
@@ -44,7 +45,7 @@ GUI::menuDefinition_t GUI::getTestMenuDefinition(bool* testBool_ptr, float* clea
 
     return definition;
 }
-void testMenu(GUI::hookList_t menuElements) { 
+void testMenu(GUI::hookList_t menuElements, F_V2::rendererControlPtrs_t* rendererControl_ptr) { 
     enum hookEnum { TEST_BOOL, CLEAR_COLOR, NOISE_TINT, TOTAL };
     if(menuElements.size() != TOTAL ) { return; }
    
