@@ -20,8 +20,6 @@
 
 #include <stdio.h>
 
-static F_V2::shaderLiteralPtrs_t shaderLiteralPtrs;
-
 static void tmpGlfwErrorCallback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
@@ -41,7 +39,10 @@ void rendererMenu(GUI::hookList_t hooks, F_V2::rendererControlPtrs_t* rendererCo
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io_ptr->Framerate, io_ptr->Framerate);    
 
     ImGui::SameLine();
-    if(ImGui::Button("Save image")) { *rendererControl_ptr->shouldSave_ptr = true; }
+    if(ImGui::Button("Save image")) { 
+        *rendererControl_ptr->shouldSave_ptr = true; 
+        *rendererControl_ptr->saveCalledFromGUI_ptr = true;
+    }
 
     ImGui::SameLine();
     ImGui::Checkbox("Interpolate colors?", rendererControl_ptr->shouldInterpolateColors_ptr);    
@@ -136,10 +137,12 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
     //Prepare the rendererControlPtrs_t structure:
     bool shouldInterpolate = mightInterpolateColors(scheme_ptr, kind);
     bool shouldSave = false;
+    bool saveCalledFromGUI = false;
     int steps = 0;
 
     rendererControlPtrs_t rendererControl;
-    rendererControl.loadPointers(&shouldInterpolate, &keepRunning, (void*)&io, &shouldSave, &steps);
+    rendererControl.loadPointers(&shouldInterpolate, &keepRunning, (void*)&io, &shouldSave, &saveCalledFromGUI, 
+                                 &steps);
 
     //RUN:
     std::string filename;
@@ -150,10 +153,11 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
                                         &rendererControl, createDefaultRendererMenu);
 
         if (shouldSave) { 
-            if(filenameFunc != nullptr) { filename = filenameFunc(steps); }
+            if(filenameFunc != nullptr) { filename = filenameFunc(steps, saveCalledFromGUI); }
             else(filename = std::to_string(steps));
             IMG::saveImage(fieldToPassToTexture_ptr, filename, IMG::imageType::JPG); 
             shouldSave = false;
+            saveCalledFromGUI = false;
         }
 
         //TODO: not really checking return of these

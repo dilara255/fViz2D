@@ -21,9 +21,25 @@ namespace F_V2 {
 
 	//TODO: CRITICAL: As soon as rendering is made more general, review the next two tests
 
-	std::string filenameFunc(int steps) {
-		return "TEST3_" + std::to_string(steps);
+	std::string filenameFunc(int steps, bool calledFromGUI) {
+		std::string calledFromGuiOrApi = "a";
+		if(calledFromGUI) { calledFromGuiOrApi = "g"; }
+		return "TEST3_" + calledFromGuiOrApi + "_" + std::to_string(steps);
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	bool rendererTestFromImage() {
 
@@ -105,6 +121,16 @@ namespace F_V2 {
 
 		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK) && savedFine;
 	}
+
+
+
+
+
+
+
+
+	
+
 
 
 
@@ -227,6 +253,13 @@ namespace F_V2 {
 
 		return passedVisualInspection && (returnCode == F_V2::rendererRetCode_st::OK);
 	}
+
+
+
+
+
+
+
 
 
 
