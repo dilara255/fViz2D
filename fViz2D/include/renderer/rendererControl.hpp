@@ -36,15 +36,4 @@ namespace F_V2 {
 
 	//TODO: implement after rendered is pulled into a class (and maybe expose this in the api instead?)
 	void saveCurrentImage();
-
-	typedef struct shaderLiteralPtrs_st {
-		const char* vertexLiteral_ptr;
-		const char* fragmentLiteral_ptr;
-
-		const char* getVertex() const { return vertexLiteral_ptr; }
-		const char* getFragment() const { return vertexLiteral_ptr; }
-
-		void storeNewVertexShader(const char* newShader_ptr) { vertexLiteral_ptr = newShader_ptr; }
-		void storeNewFragmentShader(const char* newShader_ptr) { fragmentLiteral_ptr = newShader_ptr; }
-	} shaderLiteralPtrs_t;
 }
