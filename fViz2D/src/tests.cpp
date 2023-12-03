@@ -8,6 +8,8 @@
 #include "timeHelpers.hpp"
 #include "miscDefines.hpp"
 
+#include "utils/guiUtils.hpp"
+
 #include "prng.hpp"
 
 #include <algorithm>
@@ -61,9 +63,11 @@ namespace F_V2 {
 
 		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
 			                                                        &clearColor.r, &noiseTint.r);
+		GUI::menuDefinitionList_t menuList;
+		menuList.push_back(testMenu);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&tintedDynamicTestDataPtr, &returnCode,
-			                                                            &clearColor, testMenu);	
+			                                                            &clearColor, &menuList);	
 			
 		//Change the dynamic image while the rendering isn't done:
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
@@ -139,6 +143,18 @@ namespace F_V2 {
 
 	#define TEST_WIDTH 512
 	#define TEST_HEIGHT 512
+
+	static bool g_testBool = false;
+	static float g_testFloat[2] = {0.0f, 0.0f};
+	void testMenuFunc2(F_V2::rendererControlPtrs_t* rendererControl_ptr) {
+		ImGui::Text("This is another test menu!"); 
+		ImGui::SameLine();
+		ImGui::Checkbox("Is this button also working?", &g_testBool);
+               
+		ImGui::DragFloat("This is a way to change a float", &g_testFloat[0]);
+		ImGui::DragFloat2("This is a way to change a float[2]", &g_testFloat[0]);
+	}
+
 	bool rendererTestFromDoubles2Dfield() {
 
 		LOG_DEBUG("This is a visual test for fViz2D. It will hot-reload a texture from a field of doubles\n"); GETCHAR_PAUSE;
@@ -165,9 +181,15 @@ namespace F_V2 {
 
 		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
 			                                                        &clearColor.r, &noiseTint.r);
+		GUI::menuDefinition_t testMenu2;
+		testMenu2.menuFunc_ptr = testMenuFunc2;
+
+		GUI::menuDefinitionList_t menuList;
+		menuList.push_back(testMenu);
+		menuList.push_back(testMenu2);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
-			                                                &clearColor, testMenu, nullptr, &scheme,
+			                                                &clearColor, &menuList, nullptr, &scheme,
 															std::string("Visual Test without Color Interpolation"),
 			                                                1024, 768, false);
 			
@@ -293,9 +315,11 @@ namespace F_V2 {
 			
 		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
 			                                                        &clearColor.r, &noiseTint.r);
+		GUI::menuDefinitionList_t menuList;
+		menuList.push_back(testMenu);
 
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&noiseDataPtr, &returnCode,
-			                                                &clearColor, testMenu, filenameFunc, &scheme,
+			                                                &clearColor, &menuList, filenameFunc, &scheme,
 															std::string("Visual Test without Color Interpolation"));
 
 		//TODO: prngg.hpp and then this : )
