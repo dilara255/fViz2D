@@ -864,7 +864,6 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         "    Out_Color = Frag_Color * texture(Texture, Frag_UV.st);\n"
         "}\n";
 
-    // Select shaders matching our GLSL versions
     const GLchar* vertex_shader = nullptr;
     const GLchar* fragment_shader = nullptr;
     if (glsl_version < 130)
@@ -887,10 +886,12 @@ bool    ImGui_ImplOpenGL3_CreateDeviceObjects()
         vertex_shader = vertex_shader_glsl_130;
         fragment_shader = fragment_shader_glsl_130;
     }
+    //TODO: if either parameter literal is not null, overried the respective shader
 
     // Create shaders
     const GLchar* vertex_shader_with_version[2] = { bd->GlslVersionString, vertex_shader };
     GLuint vert_handle = glCreateShader(GL_VERTEX_SHADER);
+    //Sends version + code literals (above) to the gpu, to be read as null-terminated strings:
     glShaderSource(vert_handle, 2, vertex_shader_with_version, nullptr);
     glCompileShader(vert_handle);
     CheckShader(vert_handle, "vertex shader");
