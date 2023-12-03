@@ -29,7 +29,7 @@ void F_V2::defaultSynchCallback() {
     return;
 }
 
-void rendererMenu(GUI::hookList_t hooks, F_V2::rendererControlPtrs_t* rendererControl_ptr) {
+void rendererMenu(F_V2::rendererControlPtrs_t* rendererControl_ptr) {
 
     auto io_ptr = (const ImGuiIO*)rendererControl_ptr->ImGuiIO_ptr;
 
