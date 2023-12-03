@@ -19,7 +19,7 @@ namespace F_V2 {
 	//TODO: ADD TEST
 	F_V2_API F_V2::rendererRetCode_st spawnRendererOnThisThread(IMG::generic2DfieldPtr_t* dynamicData_ptr,
 												  COLOR::rgbaF_t* clearColor_ptr,
-												  GUI::menuDefinition_t userMenuDef,
+												  GUI::menuDefinitionList_t* userMenuDefs_ptr = nullptr,
 		                                          GUI::filenameCallback_func* filenameFunc = nullptr,
 												  COLOR::colorInterpolation_t* scheme_ptr = nullptr,
 												  std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
@@ -33,7 +33,7 @@ namespace F_V2 {
 	F_V2_API std::thread spawnRendererOnNewThread(IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 											      F_V2::rendererRetCode_st* returnCode_ptr, 
 											      COLOR::rgbaF_t* clearColor_ptr,
-											      GUI::menuDefinition_t userMenuDef,
+											      GUI::menuDefinitionList_t* userMenuDefs_ptr = nullptr,
 		                                          GUI::filenameCallback_func* filenameFunc = nullptr,
 											      COLOR::colorInterpolation_t* scheme_ptr = nullptr,
 											      std::string windowName = "Ogl3 Render Test - imGui + Glfw", 

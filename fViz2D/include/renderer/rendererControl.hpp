@@ -11,7 +11,7 @@ namespace F_V2 {
 	//Supported formats are the same as those supported by the texture loading functions in renderData.hpp
 	F_V2::rendererRetCode_st rendererMain(IMG::generic2DfieldPtr_t* dynamicData_ptr,
                                           COLOR::rgbaF_t* clearColor_ptr,
-		                                  GUI::menuDefinition_t userMenuDef = {},
+		                                  GUI::menuDefinitionList_t* userMenuDefs_ptr = nullptr,
 		                                  GUI::filenameCallback_func* filenameFunc = nullptr,
                                           COLOR::colorInterpolation_t* scheme_ptr = nullptr,
                                           std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
@@ -25,7 +25,7 @@ namespace F_V2 {
 	void rendererMainForSeparateThread(IMG::generic2DfieldPtr_t* dynamicData_ptr, 
 		                               F_V2::rendererRetCode_st* returnCode_ptr, 
 									   COLOR::rgbaF_t* clearColor_ptr,
-		                               GUI::menuDefinition_t userMenuDef = {},
+		                               GUI::menuDefinitionList_t* userMenuDefs_ptr = nullptr,
 		                               GUI::filenameCallback_func* filenameFunc = nullptr,
                                        COLOR::colorInterpolation_t* scheme_ptr = nullptr,
                                        std::string windowName = "Ogl3 Render Test - imGui + Glfw", 
