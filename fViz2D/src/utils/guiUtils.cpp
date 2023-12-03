@@ -25,34 +25,37 @@ void GUI::imGuiCreateMenu(menuDefinition_t menuDefinition, F_V2::rendererControl
 
     ImGui::Begin(menuDefinition.menuName.c_str());             
     
-    menuDefinition.menuFunc_ptr(menuDefinition.hooks, rendererControl_ptr);
+    menuDefinition.menuFunc_ptr(rendererControl_ptr);
 
     ImGui::End();
 }
 
-void testMenu(GUI::hookList_t menuElements, F_V2::rendererControlPtrs_t* rendererControl_ptr);
+void testMenu(F_V2::rendererControlPtrs_t* rendererControl_ptr);
+
+static bool* g_testBool_ptr;
+static float* g_clearColorFirstElement_ptr;
+static float* g_noiseTintColorFirstElement_ptr;
+
 GUI::menuDefinition_t GUI::getTestMenuDefinition(bool* testBool_ptr, float* clearColorFirstElement_ptr, 
                                                  float* noiseTintColorFirstElement_ptr) {
 
     GUI::menuDefinition_t definition;
     definition.menuFunc_ptr = testMenu;
 
-    definition.hooks.push_back((void*)testBool_ptr);
-    definition.hooks.push_back((void*)clearColorFirstElement_ptr);
-    definition.hooks.push_back((void*)noiseTintColorFirstElement_ptr);
+    g_testBool_ptr = testBool_ptr;
+    g_clearColorFirstElement_ptr = clearColorFirstElement_ptr;
+    g_noiseTintColorFirstElement_ptr = noiseTintColorFirstElement_ptr;
 
     definition.menuName = "Test Menu";
 
     return definition;
 }
-void testMenu(GUI::hookList_t menuElements, F_V2::rendererControlPtrs_t* rendererControl_ptr) { 
-    enum hookEnum { TEST_BOOL, CLEAR_COLOR, NOISE_TINT, TOTAL };
-    if(menuElements.size() != TOTAL ) { return; }
+void testMenu(F_V2::rendererControlPtrs_t* rendererControl_ptr) { 
    
     ImGui::Text("This is a test menu."); 
     ImGui::SameLine();
-    ImGui::Checkbox("Is this working?", (bool*)menuElements.at(TEST_BOOL));
+    ImGui::Checkbox("Is this working?", g_testBool_ptr);
                
-    ImGui::ColorEdit4("clear color", (float*)menuElements.at(CLEAR_COLOR)); 
-    ImGui::ColorEdit4("noise tint", (float*)menuElements.at(NOISE_TINT));
+    ImGui::ColorEdit4("clear color", g_clearColorFirstElement_ptr); 
+    ImGui::ColorEdit4("noise tint", g_noiseTintColorFirstElement_ptr);
 }
