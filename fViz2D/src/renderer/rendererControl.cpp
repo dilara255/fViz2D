@@ -20,6 +20,8 @@
 
 #include <stdio.h>
 
+static F_V2::shaderLiteralPtrs_t shaderLiteralPtrs;
+
 static void tmpGlfwErrorCallback(int error, const char* description)
 {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);

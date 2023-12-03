@@ -135,6 +135,7 @@ namespace F_V2 {
 		IMG::generic2DfieldPtr_t noiseDataPtr;
 		noiseDataPtr.storeFloatsField(&noiseToRender);
 		COLOR::colorInterpolation_t scheme;
+		scheme.loadScheme(&COLOR::defaultBWscheme);
 
 		GUI::menuDefinition_t testMenu = GUI::getTestMenuDefinition(&passedVisualInspection, 
 			                                                        &clearColor.r, &noiseTint.r);
