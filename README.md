@@ -6,9 +6,10 @@ WIP: the goal is to be able to receive data and texture quads with it in real-ti
 Current state: 
 - Renders a single data field (with support for different kinds of fields). 
 - Can translate scalars to simple color schemes (for now, on the CPU - shader support will come later).
-- Simple image saving (via GUI and as an utility function).
-- Custumizable GUI hooks. *VERY HACKY*, but works. To be made prettier in the future.
+- Simple image saving (via GUI and as an utility function, no gif support yet).
+- Custumizable GUI menus (pre-compilation, support for runtime hook management in future version).
 - All in all, a minimal viable version of the system.
+- Next updates will focus on maintenance, tests and docummentation.
 
 ## Requirements:
 
