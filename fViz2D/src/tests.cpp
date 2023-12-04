@@ -69,6 +69,9 @@ namespace F_V2 {
 		std::thread testRendererThread = F_V2::spawnRendererOnNewThread(&tintedDynamicTestDataPtr, &returnCode,
 			                                                            &clearColor, &menuList);	
 			
+		AZ::hybridBusySleepForMicros(std::chrono::microseconds(MICROS_IN_A_SECOND));
+		F_V2::saveCurrentImage(1);
+
 		//Change the dynamic image while the rendering isn't done:
 		const int microsToSleepPerCycle = MICROS_IN_A_SECOND / 200;
 		auto data_ptr = dynamicTestData.data.get();

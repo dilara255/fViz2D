@@ -33,7 +33,4 @@ namespace F_V2 {
 		                               bool createDefaultRendererMenu = true,
 		                               synchCallback_func synchCallback = defaultSynchCallback,
                                        const char* bannerPathFromBinary = F_V2::testBannerPathFromBinary);
-
-	//TODO: implement after rendered is pulled into a class (and maybe expose this in the api instead?)
-	void saveCurrentImage();
 }

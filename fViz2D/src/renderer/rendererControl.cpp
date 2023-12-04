@@ -73,6 +73,15 @@ void render(GLFWwindow* window, TEX::textureID_t* dynamicTexture_ptr, GUI::menuD
     glfwSwapBuffers(window);
 }
 
+//TODO: as soon as renderer is pulled into class, this should also be pulled there:
+static bool g_apiAskedToSave = false;
+static int g_saveQuality = 100;
+
+void F_V2::saveCurrentImage(int quality) {
+    g_saveQuality = std::clamp(quality, 0, 100);
+    g_apiAskedToSave = true;
+}
+
 bool mightInterpolateColors(COLOR::colorInterpolation_t* scheme_ptr, IMG::kinds2Ddata kind) {
     return (scheme_ptr != nullptr) && (scheme_ptr->correspondences_ptr->size() >= 2) && 
            (kind == IMG::kinds2Ddata::FLOATS_FIELD || kind == IMG::kinds2Ddata::DOUBLES_FIELD);
@@ -104,8 +113,7 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
     GLFWwindow* window = initGlfwAndCreateWindow(tmpGlfwErrorCallback, width, height, windowName.c_str());
     if(window == nullptr) { return rendererRetCode_st::CONTEXT_ACQ_FAILED; }
 
-    ImGuiIO& io = GUI::initImgui(window, "#version 330");
-    //TODO: check return?
+    ImGuiIO& io = GUI::initImgui(window, "#version 330");     //TODO: check return?
 
     //Load test bannerTexture:
 
@@ -154,12 +162,14 @@ F_V2::rendererRetCode_st F_V2::rendererMain(IMG::generic2DfieldPtr_t* dynamicDat
         render(window, &dynamicTexture, userMenuDefs_ptr, &bannerTexture, clearColor_ptr, 
                                         &rendererControl, createDefaultRendererMenu);
 
-        if (shouldSave) { 
+        if (shouldSave || g_apiAskedToSave) { 
             if(filenameFunc != nullptr) { filename = filenameFunc(steps, saveCalledFromGUI); }
             else(filename = std::to_string(steps));
-            IMG::saveImage(fieldToPassToTexture_ptr, filename, IMG::imageType::JPG); 
+            IMG::saveImage(fieldToPassToTexture_ptr, filename, IMG::imageType::JPG, g_saveQuality);
+            g_saveQuality = 100;
             shouldSave = false;
             saveCalledFromGUI = false;
+            g_apiAskedToSave = false;
         }
 
         //TODO: not really checking return of these
