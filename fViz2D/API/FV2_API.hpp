@@ -65,5 +65,7 @@ namespace F_V2 {
 		}
 	} rendererControlPtrs_t;
 
-	//TODO: add function to tell renderer to save current image
+	//Quality will be clamped tp [0, 100]
+	//Filename will use the naming function passsed to the renderer (or default), and tell it this is an API call
+	void saveCurrentImage(int quality = 100);
 }
